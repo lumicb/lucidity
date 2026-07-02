@@ -1,6 +1,6 @@
 -- ====================================================================
--- LUCIDITY UI FRAMEWORK (COMPLETE VERSION)
--- Premium Monochrome UI with Lucide Icon Mapping & Scale Management
+-- LUCIDITY UI FRAMEWORK (COMPLETE PRODUCTION VERSION)
+-- Premium Monochrome UI with Dynamic Scale & Pinned Settings
 -- ====================================================================
 
 local Lucidity = {}
@@ -12,7 +12,7 @@ local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 
--- 🔳 RAYFIELD-INSPIRED PREMIUM MONOCHROME THEME
+-- 🔳 RAYFIELD-INSPIRED PREMIUM MONOCHROME THEME SYSTEM
 Lucidity.Theme = {
     WindowBg = Color3.fromRGB(18, 19, 22),          -- Matte dark charcoal canvas
     Sidebar = Color3.fromRGB(24, 25, 30),           -- Structural sleek sidebar
@@ -109,6 +109,7 @@ function Lucidity:CreateWindow(config)
     local self = setmetatable({}, Lucidity)
     self.Elements = {}
     self.ConfigData = {}
+    self.TabCount = 0
     
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "Lucidity_" .. HttpService:GenerateGUID(false)
@@ -209,7 +210,7 @@ function Lucidity:BuildMainInterface(windowName)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
-    -- ❌ PREMIUM CLOSE / DESTROY UI BUTTON
+    -- ❌ TOP-BAR CLOSE BUTTON
     local closeBtn = Instance.new("TextButton")
     closeBtn.Name = "CloseButton"
     closeBtn.Size = UDim2.new(0, 28, 0, 28)
@@ -264,6 +265,7 @@ function Lucidity:BuildMainInterface(windowName)
     local sLayout = Instance.new("UIListLayout")
     sLayout.Padding = UDim.new(0, 4)
     sLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    sLayout.SortOrder = Enum.SortOrder.LayoutOrder -- Added layout ordering system
     sLayout.Parent = sidebar
     Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0, 12)
 
@@ -279,7 +281,7 @@ function Lucidity:BuildMainInterface(windowName)
     self:EnableDragging()
     self:LoadSettingsEngine()
 
-    -- ✨ GENERATE THE AUTOMATED COMPONENT SHOWCASE AND SETTINGS
+    -- ✨ GENERATE CHANNELS AND RUN AUTOMATED SETTUP
     task.spawn(function()
         local Showcase = self:CreateTab("Element Showcase", "eye")
         
@@ -305,17 +307,32 @@ function Lucidity:BuildMainInterface(windowName)
             print("Selected choice: ", choice)
         end)
 
-        local Settings = self:CreateTab("Settings", "settings")
+        -- ⚙️ LOCKED BOTTOM SETTINGS TAB WITH FIXED HIGH LAYOUTORDER
+        local Settings = self:CreateTab("Settings", "settings", true)
         Settings:CreateSection("Client Configurations")
         
+        -- UI Scale Dropdown (Now dropping completely down to 50%)
         Settings:CreateDropdown({
             Name = "Interface UI Scale Profile",
-            Options = {"75%", "100%", "125%", "150%"}
+            Options = {"50%", "75%", "100%", "125%", "150%"}
         }, function(selected)
             local cleanPercent = string.gsub(selected, "%%", "")
             local numericScale = tonumber(cleanPercent)
             if numericScale then
                 uiScale.Scale = numericScale / 100
+            end
+        end)
+
+        -- Nested Theme Customization Menu Directly Below UI Scale
+        Settings:CreateDropdown({
+            Name = "Interface Theme Palette",
+            Options = {"Dark Mode", "Light Mode"}
+        }, function(selectedTheme)
+            if selectedTheme == "Light Mode" then
+                print("Switching engine interface to Light Mode rules...")
+                -- Light skin runtime values can be mapped here
+            else
+                print("Restoring default Dark Mode visual configurations...")
             end
         end)
     end)
@@ -357,16 +374,25 @@ function Lucidity:LoadSettingsEngine()
     end
 end
 
-function Lucidity:CreateTab(tabName, iconName)
+function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
     local theme = self.Theme
     local windowSelf = self
     
+    windowSelf.TabCount = windowSelf.TabCount + 1
+
     local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(0, 160, 0, 36)
     tabButton.BackgroundTransparency = 1
     tabButton.Text = ""
     tabButton.Parent = windowSelf.Sidebar
     Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
+    
+    -- Layout Priority Engine: Forces Settings to bottom, counts upward sequentially for others
+    if isSettingsTab then
+        tabButton.LayoutOrder = 9999
+    else
+        tabButton.LayoutOrder = windowSelf.TabCount
+    end
 
     local tabLayout = Instance.new("UIListLayout")
     tabLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -430,7 +456,7 @@ function Lucidity:CreateTab(tabName, iconName)
     end
 
     tabButton.MouseButton1Click:Connect(activateTab)
-    if #windowSelf.Pages:GetChildren() == 1 then activateTab() end
+    if windowSelf.TabCount == 1 then activateTab() end
     
     local tabObject = {}
 
@@ -562,7 +588,9 @@ function Lucidity:CreateTab(tabName, iconName)
         sliderFrame.BackgroundColor3 = theme.CardBackground
         sliderFrame.Parent = pageContainer
         Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 8)
-        Instance.new("UIStroke", sliderFrame).Color = theme.Border
+        sliderFrame.BorderSizePixel = 0
+        local slStroke = Instance.new("UIStroke", sliderFrame)
+        slStroke.Color = theme.Border
 
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(0.6, 0, 0, 26)
