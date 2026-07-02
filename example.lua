@@ -1,27 +1,38 @@
--- 1. Grab the factory engine from your GitHub
+-- 1. Load the updated engine from your GitHub
 local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/main.lua"))()
 
--- 2. Tell the engine to build your beautiful gradient window!
+-- 2. Initialize the Window
 local Window = Lucidity:CreateWindow({
-    Name = "Lucidity Testing"
+    Name = "Lucidity OS Premium"
 })
 
--- 3. Tell the window to make a tab
-local MainTab = Window:CreateTab("Main Features", "home")
+-- 3. Create a Main Dashboard Tab
+local Dashboard = Window:CreateTab("Dashboard", "home")
 
--- 4. Put a section and a button inside that tab
-MainTab:CreateSection("Automation")
+Dashboard:CreateSection("Quick Actions")
 
-MainTab:CreateButton({
-    Name = "Test Click Effect",
-    Interact = "Press"
+Dashboard:CreateButton({
+    Name = "Optimize Memory",
+    Interact = "Clean"
 }, function()
-    print("The button works!")
+    print("Cleaning game memory frames...")
 end)
 
-MainTab:CreateToggle({
-    Name = "Test Toggle Switch",
-    Default = false
-}, function(state)
-    print("Toggle is now: ", state)
+Dashboard:CreateButton({
+    Name = "Teleport to Safe Zone",
+    Interact = "Teleport"
+}, function()
+    print("Teleporting player...")
+end)
+
+-- 4. Create an Exploits/Features Tab
+local Combat = Window:CreateTab("Combat", "combat")
+
+Combat:CreateSection("Combat Enhancements")
+
+Combat:CreateButton({
+    Name = "Toggle Kill Aura",
+    Interact = "Activate"
+}, function()
+    print("Kill Aura toggled.")
 end)
