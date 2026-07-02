@@ -1,38 +1,17 @@
--- 1. Load the updated engine from your GitHub
 local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/main.lua"))()
 
--- 2. Initialize the Window
-local Window = Lucidity:CreateWindow({
-    Name = "Lucidity OS Premium"
+local UI = Lucidity:CreateWindow({
+    Name = "Lucidity Hub"
 })
 
--- 3. Create a Main Dashboard Tab
-local Dashboard = Window:CreateTab("Dashboard", "home")
+-- Build out test arrays
+local Movement = UI:CreateTab("Movement", "home")
+local Combat = UI:CreateTab("Combat", "combat")
 
-Dashboard:CreateSection("Quick Actions")
+Movement:CreateSection("Speeds")
+Movement:CreateButton({ Name = "Fly Hack (Toggle)" }, function() print("Flying") end)
+Movement:CreateButton({ Name = "Infinite Jump" }, function() print("Jumping") end)
 
-Dashboard:CreateButton({
-    Name = "Optimize Memory",
-    Interact = "Clean"
-}, function()
-    print("Cleaning game memory frames...")
-end)
-
-Dashboard:CreateButton({
-    Name = "Teleport to Safe Zone",
-    Interact = "Teleport"
-}, function()
-    print("Teleporting player...")
-end)
-
--- 4. Create an Exploits/Features Tab
-local Combat = Window:CreateTab("Combat", "combat")
-
-Combat:CreateSection("Combat Enhancements")
-
-Combat:CreateButton({
-    Name = "Toggle Kill Aura",
-    Interact = "Activate"
-}, function()
-    print("Kill Aura toggled.")
-end)
+Combat:CreateSection("Targeters")
+Combat:CreateButton({ Name = "Silent Aim Assist" }, function() print("Aiming") end)
+Combat:CreateButton({ Name = "Kill Aura Trigger" }, function() print("Slaying") end)
