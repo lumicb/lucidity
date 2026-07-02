@@ -1,17 +1,24 @@
 local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/main.lua"))()
 
-local UI = Lucidity:CreateWindow({
-    Name = "Lucidity Hub"
+local Hub = Lucidity:CreateWindow({
+    Name = "Lucidity Minimal"
 })
 
--- Build out test arrays
-local Movement = UI:CreateTab("Movement", "home")
-local Combat = UI:CreateTab("Combat", "combat")
+local Combat = Hub:CreateTab("Combat", "combat")
+local Player = Hub:CreateTab("Player", "home")
 
-Movement:CreateSection("Speeds")
-Movement:CreateButton({ Name = "Fly Hack (Toggle)" }, function() print("Flying") end)
-Movement:CreateButton({ Name = "Infinite Jump" }, function() print("Jumping") end)
+Combat:CreateSection("Target Settings")
+Combat:CreateToggle({ Name = "Silent Aim Assist", Default = false }, function(state)
+    print("Aim state: ", state)
+end)
 
-Combat:CreateSection("Targeters")
-Combat:CreateButton({ Name = "Silent Aim Assist" }, function() print("Aiming") end)
-Combat:CreateButton({ Name = "Kill Aura Trigger" }, function() print("Slaying") end)
+Player:CreateSection("Physical Attributes")
+Player:CreateSlider({
+    Name = "WalkSpeed Modifier",
+    Min = 16,
+    Max = 150,
+    Default = 16,
+    Suffix = " studs"
+}, function(val)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = val
+end)
