@@ -1,40 +1,82 @@
-local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/main.lua"))()
+-- ==========================================
+-- LUCIDITY UI HUB - EXECUTABLE IMPLEMENTATION
+-- ==========================================
 
--- Initializing layout with a functional configuration and verification key
-local Hub = Lucidity:CreateWindow({
-    Name = "Lucidity Custom System",
-    KeySystem = true,
-    Key = "lucidity123",
-    ConfigName = "LucidityProfile.json"
+-- 1. Load the UI Library (Assuming it's saved locally or executed via loadstring)
+-- If you host main.lua on GitHub, replace this with your loadstring line:
+-- local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/..."))()
+local Lucidity = loadstring(readfile("main.lua"))()
+
+-- 2. Initialize the Main Window
+local Window = Lucidity:CreateWindow({
+    Name = "Lucidity Premium | Project s0lac3",
+    ConfigName = "Lucidity_Settings.json", -- Auto-saves config profiles here
+    KeySystem = false,                      -- Set to true if you want to require a key
+    Key = "solace2026"                      -- The password string if KeySystem is true
 })
 
-local Combat = Hub:CreateTab("Combat", "combat")
+-- 3. Create the Main/Combat Tab
+local MainTab = Window:CreateTab("Main Framework", "combat")
 
-Combat:CreateSection("Interactive Modules")
+MainTab:CreateSection("Automation Features")
 
-Combat:CreateButton({ Name = "Execute Instakill Hitbox" }, function()
-    -- Fire a finished task notification cleanly
-    Hub:Notify({
-        Title = "Module Fired",
-        Content = "Hitbox expansion sequence compiled successfully.",
-        Duration = 4
-    })
-end)
-
-Combat:CreateToggle({ Name = "Auto-Parry Active", Default = false, SaveName = "Parry_State" }, function(state)
-    print("Parry toggle state updated: ", state)
-end)
-
-Combat:CreateSlider({ Name = "Proximity Limit Reach", Min = 5, Max = 50, Default = 15, Suffix = " studs", SaveName = "Prox_Limit" }, function(val)
-    print("Slider value shifted: ", val)
-end)
-
-Combat:CreateInput({ Name = "Webhook Status Target", Placeholder = "URL Destination..." }, function(text, enterPressed)
-    if enterPressed then
-        print("Target dynamic text updated: ", text)
+MainTab:CreateToggle({
+    Name = "Auto-Harvest Resources",
+    SaveName = "AutoHarvest_Toggle", -- Unique key for auto-saving
+    Default = false
+}, function(state)
+    _G.AutoHarvest = state
+    if state then
+        print("[Lucidity] Harvesting loop started.")
+        -- Insert your loop logic here
+    else
+        print("[Lucidity] Harvesting loop terminated.")
     end
 end)
 
-Combat:CreateDropdown({ Name = "Target Scan Selection", Options = {"Nearest Distance", "Lowest Health", "Priority Hostile"} }, function(selected)
-    print("Dropdown choice picked: ", selected)
+MainTab:CreateButton({
+    Name = "Instant Teleport to Base"
+}, function()
+    Lucidity:Notify({
+        Title = "Teleportation",
+        Content = "Moving client to secure anchor point...",
+        Duration = 2.5
+    })
+    -- Insert character teleportation vector here
 end)
+
+-- 4. Create an Optimizations Tab
+local UtilityTab = Window:CreateTab("Utility & Config", "search")
+
+UtilityTab:CreateSection("Environment Tuning")
+
+UtilityTab:CreateSlider({
+    Name = "Render Distance Margin",
+    Min = 50,
+    Max = 500,
+    Default = 250,
+    Suffix = " studs",
+    SaveName = "Render_Slider"
+}, function(value)
+    print("Adjusted render radius to: " .. value)
+end)
+
+UtilityTab:CreateInput({
+    Name = "Custom Webhook URL",
+    Placeholder = "https://discord.com/api/webhooks/..."
+}, function(text, enterPressed)
+    if enterPressed then
+        Lucidity:Notify({
+            Title = "Data Sync",
+            Content = "Log destination updated successfully.",
+            Duration = 3
+        })
+    end
+end)
+
+-- 5. Send a confirmation toast that the script finished executing
+Lucidity:Notify({
+    Title = "Initialization Complete",
+    Content = "All module components compiled and running.",
+    Duration = 4
+})
