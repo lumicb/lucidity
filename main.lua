@@ -282,31 +282,7 @@ function Lucidity:BuildMainInterface(windowName)
     self:LoadSettingsEngine()
 
     -- ✨ GENERATE CHANNELS AND RUN AUTOMATED SETTUP
-    task.spawn(function()
-        local Showcase = self:CreateTab("Element Showcase", "eye")
-        
-        Showcase:CreateSection("Basic Interactions")
-        Showcase:CreateButton({Name = "Sample Action Button"}, function()
-            self:Notify({Title = "Button Clicked", Content = "The interface triggered perfectly.", Duration = 2})
-        end)
-        
-        Showcase:CreateToggle({Name = "Automated Toggle Module", Default = false}, function(state)
-            self:Notify({Title = "Toggle Switched", Content = "State changed to: " .. tostring(state), Duration = 2})
-        end)
-
-        Showcase:CreateSection("Data & Input Providers")
-        Showcase:CreateSlider({Name = "Adjustable Framework Range", Min = 0, Max = 100, Default = 50, Suffix = " points"}, function(val)
-            print("Slider updated: ", val)
-        end)
-        
-        Showcase:CreateInput({Name = "String Input Node", Placeholder = "Type variable data..."}, function(text)
-            self:Notify({Title = "Input Maintained", Content = "Captured: " .. text, Duration = 2.5})
-        end)
-
-        Showcase:CreateDropdown({Name = "Option Select Dropdown", Options = {"Alpha Choice", "Beta Variant", "Gamma Route"}}, function(choice)
-            print("Selected choice: ", choice)
-        end)
-
+    
         -- ⚙️ LOCKED BOTTOM SETTINGS TAB WITH FIXED HIGH LAYOUTORDER
         local Settings = self:CreateTab("Settings", "settings", true)
         Settings:CreateSection("Client Configurations")
