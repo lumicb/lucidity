@@ -1,8 +1,3 @@
--- ====================================================================
--- LUCIDITY UI FRAMEWORK (COMPLETE PRODUCTION VERSION)
--- Premium Monochrome UI with Dynamic Scale & Pinned Settings
--- ====================================================================
-
 local Lucidity = {}
 Lucidity.__index = Lucidity
 
