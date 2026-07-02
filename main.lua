@@ -19,13 +19,15 @@ Lucidity.Theme = {
     Font = Enum.Font.GothamMedium
 }
 
+-- Lucide-style mapped asset IDs
 local Icons = {
     home = "rbxassetid://10734951102",
     settings = "rbxassetid://10734950309",
     combat = "rbxassetid://10747360634",
     search = "rbxassetid://10734950791",
     window = "rbxassetid://10723343385",
-    chevron = "rbxassetid://10734896828"
+    chevron = "rbxassetid://10734896828",
+    eye = "rbxassetid://10723345453"
 }
 
 -- 🔔 ENGINE NOTIFICATIONS
@@ -58,7 +60,7 @@ function Lucidity:Notify(config)
     Instance.new("UIStroke", card).Color = self.Theme.Border
 
     local lblTitle = Instance.new("TextLabel")
-    lblTitle.Size = UDim2.new(1, -20, 0, 24)
+    lblTitle.Size = UDim2.new(1, -24, 0, 24)
     lblTitle.Position = UDim2.new(0, 12, 0, 6)
     lblTitle.BackgroundTransparency = 1
     lblTitle.Text = title
@@ -108,7 +110,6 @@ function Lucidity:CreateWindow(config)
     screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     self.ScreenGui = screenGui
 
-    -- 🔑 VERIFICATION SECURITY GATEWAY
     if hasKeySystem then
         local keyWindow = Instance.new("Frame")
         keyWindow.Size = UDim2.new(0, 340, 0, 180)
@@ -184,7 +185,6 @@ function Lucidity:BuildMainInterface(windowName)
     self.UIScale = uiScale
     Instance.new("UIStroke", mainFrame).Color = self.Theme.Border
 
-    -- Minimal Top Drag Header
     local topBar = Instance.new("Frame")
     topBar.Size = UDim2.new(1, 0, 0, 50)
     topBar.BackgroundTransparency = 1
@@ -202,7 +202,6 @@ function Lucidity:BuildMainInterface(windowName)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
-    -- Sidebar Panel
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
     sidebar.Size = UDim2.new(0, 180, 1, -66)
@@ -219,7 +218,6 @@ function Lucidity:BuildMainInterface(windowName)
     sLayout.Parent = sidebar
     Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0, 12)
 
-    -- Right Content Layout Display
     local mainDisplay = Instance.new("Frame")
     mainDisplay.Size = UDim2.new(1, -216, 1, -66)
     mainDisplay.Position = UDim2.new(0, 204, 0, 54)
@@ -232,19 +230,47 @@ function Lucidity:BuildMainInterface(windowName)
     self:EnableDragging()
     self:LoadSettingsEngine()
 
-    -- Standard Global DPI Configuration Module inside settings
+    -- ✨ GENERATE THE AUTOMATED COMPONENT SHOWCASE AND SETTINGS
     task.spawn(function()
+        -- Showcase Tab Container
+        local Showcase = self:CreateTab("Element Showcase", "eye")
+        
+        Showcase:CreateSection("Basic Interactions")
+        Showcase:CreateButton({Name = "Sample Action Button"}, function()
+            self:Notify({Title = "Button Clicked", Content = "The interface triggered perfectly.", Duration = 2})
+        end)
+        
+        Showcase:CreateToggle({Name = "Automated Toggle Module", Default = false}, function(state)
+            self:Notify({Title = "Toggle Switched", Content = "State changed to: " .. tostring(state), Duration = 2})
+        end)
+
+        Showcase:CreateSection("Data & Input Providers")
+        Showcase:CreateSlider({Name = "Adjustable Framework Range", Min = 0, Max = 100, Default = 50, Suffix = " points"}, function(val)
+            print("Slider updated: ", val)
+        end)
+        
+        Showcase:CreateInput({Name = "String Input Node", Placeholder = "Type variable data..."}, function(text)
+            self:Notify({Title = "Input Maintained", Content = "Captured: " .. text, Duration = 2.5})
+        end)
+
+        Showcase:CreateDropdown({Name = "Option Select Dropdown", Options = {"Alpha Choice", "Beta Variant", "Gamma Route"}}, function(choice)
+            print("Selected choice: ", choice)
+        end)
+
+        -- Structural Settings Tab
         local Settings = self:CreateTab("Settings", "settings")
         Settings:CreateSection("Client Configurations")
-        Settings:CreateSlider({
+        
+        -- Glitch-proof Dropdown UI Scale instead of continuous slider updates
+        Settings:CreateDropdown({
             Name = "Interface UI Scale Profile",
-            Min = 50,
-            Max = 200,
-            Default = 100,
-            Suffix = "%",
-            SaveName = "Client_DPI_Scale"
-        }, function(value)
-            uiScale.Scale = value / 100
+            Options = {"75%", "100%", "125%", "150%"}
+        }, function(selected)
+            local cleanPercent = string.gsub(selected, "%%", "")
+            local numericScale = tonumber(cleanPercent)
+            if numericScale then
+                uiScale.Scale = numericScale / 100
+            end
         end)
     end)
 end
@@ -271,7 +297,6 @@ function Lucidity:EnableDragging()
     end)
 end
 
--- 📂 JSON CONFIG TRACKING UTILITIES
 function Lucidity:SaveSettingsEngine()
     if writefile then
         writefile(self.ConfigName, HttpService:JSONEncode(self.ConfigData))
@@ -332,7 +357,6 @@ function Lucidity:CreateTab(tabName, iconName)
     pageContainer.ScrollBarThickness = 0
     pageContainer.Parent = windowSelf.Pages
 
-    -- Rayfield-accurate content margins
     local pPadding = Instance.new("UIPadding", pageContainer)
     pPadding.PaddingLeft = UDim.new(0, 14)
     pPadding.PaddingRight = UDim.new(0, 14)
@@ -379,7 +403,6 @@ function Lucidity:CreateTab(tabName, iconName)
         sPadding.PaddingLeft = UDim.new(0, 4)
     end
 
-    -- 🔳 INTERACTABLE COMPONENT: BUTTON
     function tabObject:CreateButton(config, callback)
         local btnText = config.Name or "Button Action"
         local callback = callback or function() end
@@ -411,7 +434,6 @@ function Lucidity:CreateTab(tabName, iconName)
         end)
     end
 
-    -- 🔳 INTERACTABLE COMPONENT: TOGGLE
     function tabObject:CreateToggle(config, callback)
         local toggleName = config.Name or "Toggle Flag"
         local saveName = config.SaveName
@@ -475,7 +497,6 @@ function Lucidity:CreateTab(tabName, iconName)
         updateToggle(false)
     end
 
-    -- 🔳 INTERACTABLE COMPONENT: SLIDER
     function tabObject:CreateSlider(config, callback)
         local sliderName = config.Name or "Slider Metric"
         local min = config.Min or 0
@@ -568,7 +589,6 @@ function Lucidity:CreateTab(tabName, iconName)
         end)
     end
 
-    -- 🔳 INTERACTABLE COMPONENT: INPUT
     function tabObject:CreateInput(config, callback)
         local inputName = config.Name or "Text Field Input"
         local placeholder = config.Placeholder or "Type here..."
@@ -612,7 +632,6 @@ function Lucidity:CreateTab(tabName, iconName)
         end)
     end
 
-    -- 🔳 INTERACTABLE COMPONENT: DROPDOWN
     function tabObject:CreateDropdown(config, callback)
         local dropName = config.Name or "Dropdown Menu"
         local options = config.Options or {}
