@@ -6,13 +6,15 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 
--- ✨ NEW BRIGHT, TRANSLUCENT VIBRANT THEME
+-- 🔳 PREMIUM MONOCHROME GLASS ARCHITECTURE
 Lucidity.Theme = {
-    Sidebar = Color3.fromRGB(245, 247, 255),       -- Clean, soft off-white
-    CardBackground = Color3.fromRGB(255, 255, 255),-- Pure white card backing for depth
-    Text = Color3.fromRGB(40, 44, 55),            -- Deep sleek slate for premium readability
-    MutedText = Color3.fromRGB(120, 125, 145),
-    Accent = Color3.fromRGB(0, 180, 255),          -- Bright sky cyan
+    WindowBg = Color3.fromRGB(248, 249, 250),       -- Pure frosted white/gray slate
+    Sidebar = Color3.fromRGB(238, 240, 243),        -- Distinct, soft structural gray
+    CardBackground = Color3.fromRGB(255, 255, 255), -- Elevated pure white elements
+    Border = Color3.fromRGB(220, 224, 230),         -- Precise, razor-thin minimalist borders
+    Text = Color3.fromRGB(25, 28, 36),              -- Ultra-deep charcoal for rich contrast
+    MutedText = Color3.fromRGB(130, 136, 148),      -- Medium slate gray
+    Active = Color3.fromRGB(15, 17, 23),            -- Deep black accents for interaction
     Font = Enum.Font.GothamMedium
 }
 
@@ -20,7 +22,8 @@ local Icons = {
     home = "rbxassetid://10734951102",
     settings = "rbxassetid://10734950309",
     combat = "rbxassetid://10747360634",
-    search = "rbxassetid://10734950791"
+    search = "rbxassetid://10734950791",
+    window = "rbxassetid://10723343385" -- Sleek vector minimalist icon
 }
 
 function Lucidity:CreateWindow(config)
@@ -28,10 +31,9 @@ function Lucidity:CreateWindow(config)
     local titleText = config.Name or "Lucidity"
     
     local self = setmetatable({}, Lucidity)
-    self.Elements = {} -- Store all searchable elements
+    self.Elements = {}
     self.IsMinimized = false
     
-    -- Main ScreenGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "Lucidity_" .. titleText
     screenGui.ResetOnSpawn = false
@@ -39,91 +41,71 @@ function Lucidity:CreateWindow(config)
     screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     self.ScreenGui = screenGui
 
-    -- 🔴 / 🟡 CREATE THE DESKTOP/MOBILE RESTORE BUTTON (Hidden initially)
-    local restoreBtn = Instance.new("TextButton")
+    -- 🔳 MINIMALIST FLOATING RESTORE ACTION BUTTON
+    local restoreBtn = Instance.new("ImageButton")
     restoreBtn.Name = "LucidityRestoreBtn"
-    restoreBtn.Size = UDim2.new(0, 50, 0, 50)
-    restoreBtn.Position = UDim2.new(0, 20, 0.5, -25)
-    restoreBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    restoreBtn.Text = "🔮"
-    restoreBtn.TextSize = 22
+    restoreBtn.Size = UDim2.new(0, 44, 0, 44)
+    restoreBtn.Position = UDim2.new(0, 24, 0.5, -22)
+    restoreBtn.BackgroundColor3 = self.Theme.CardBackground
+    restoreBtn.Image = Icons.window
+    restoreBtn.ImageColor3 = self.Theme.Text
+    restoreBtn.ScaleType = Enum.ScaleType.Fit
     restoreBtn.Visible = false
     restoreBtn.ZIndex = 10
     restoreBtn.Parent = screenGui
-    Instance.new("UICorner", restoreBtn).CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", restoreBtn).CornerRadius = UDim.new(0, 12)
     local btnStroke = Instance.new("UIStroke", restoreBtn)
-    btnStroke.Color = Color3.fromRGB(0, 200, 255)
-    btnStroke.Thickness = 2
+    btnStroke.Color = self.Theme.Border
+    btnStroke.Thickness = 1.5
 
-    -- Main Window Frame (With premium 24px corner rounding)
+    -- Main Architectural Canvas Frame (24px Ultra-Rounding)
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
     mainFrame.Size = UDim2.new(0, 680, 0, 460)
     mainFrame.Position = UDim2.new(0.5, -340, 0.5, -230)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    mainFrame.BackgroundColor3 = self.Theme.WindowBg
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = screenGui
     self.MainFrame = mainFrame
-
-    local mainCorner = Instance.new("UICorner")
-    mainCorner.CornerRadius = UDim.new(0, 24)
-    mainCorner.Parent = mainFrame
+    Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 24)
 
     local uiScale = Instance.new("UIScale")
     uiScale.Scale = 1
     uiScale.Parent = mainFrame
     self.UIScale = uiScale
 
-    -- Premium shadow stroke boundary
     local stroke = Instance.new("UIStroke")
-    stroke.Thickness = 2
-    stroke.Color = Color3.fromRGB(230, 235, 250)
+    stroke.Thickness = 1.5
+    stroke.Color = self.Theme.Border
     stroke.Parent = mainFrame
 
-    -- 🌸 HYPER-VIBRANT BACKGROUND DUAL GRADIENT
-    local gradientFrame = Instance.new("Frame")
-    gradientFrame.Size = UDim2.new(1, 0, 1, 0)
-    gradientFrame.BorderSizePixel = 0
-    gradientFrame.ClipsDescendants = true
-    gradientFrame.Parent = mainFrame
-    Instance.new("UICorner", gradientFrame).CornerRadius = UDim.new(0, 24)
-
-    local uiGradient = Instance.new("UIGradient")
-    uiGradient.Rotation = 35
-    uiGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(255, 110, 180)), -- Dreamy Vibrant Pink
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(130, 90, 255)),  -- Radiant Electric Violet
-        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(0, 220, 255))    -- Ultra Vibrant Sky Blue
-    })
-    uiGradient.Parent = gradientFrame
-
-    -- Clean Bright Glass Overlap Tint (Removes the muddy dark feeling)
-    local glassTint = Instance.new("Frame")
-    glassTint.Size = UDim2.new(1, 0, 1, 0)
-    glassTint.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    glassTint.BackgroundTransparency = 0.45 
-    glassTint.BorderSizePixel = 0
-    glassTint.Parent = gradientFrame
-
-    -- 🖥️ TOP WINDOW PANEL (Mac Style OS Management)
+    -- 🖥️ SLICK TOP HEADLINE BAR
     local topBar = Instance.new("Frame")
-    topBar.Size = UDim2.new(1, 0, 0, 46)
+    topBar.Size = UDim2.new(1, 0, 0, 50)
     topBar.BackgroundTransparency = 1
     topBar.Parent = mainFrame
     self.TopBar = topBar
 
+    local titleIcon = Instance.new("ImageLabel")
+    titleIcon.Size = UDim2.new(0, 16, 0, 16)
+    titleIcon.Position = UDim2.new(0, 24, 0.5, -8)
+    titleIcon.BackgroundTransparency = 1
+    titleIcon.Image = Icons.window
+    titleIcon.ImageColor3 = self.Theme.Text
+    titleIcon.Parent = topBar
+
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(0.4, 0, 1, 0)
-    titleLabel.Position = UDim2.new(0, 24, 0, 0)
+    titleLabel.Position = UDim2.new(0, 48, 0, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = "🔮 " .. titleText
+    titleLabel.Text = titleText
     titleLabel.TextColor3 = self.Theme.Text
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
-    -- 🛠️ WINDOW CONTROLS (Red & Yellow Buttons)
+    -- Minimalist Utility Windows Controls
     local controls = Instance.new("Frame")
     controls.Size = UDim2.new(0, 60, 1, 0)
     controls.Position = UDim2.new(1, -84, 0, 0)
@@ -134,26 +116,25 @@ function Lucidity:CreateWindow(config)
     controlLayout.FillDirection = Enum.FillDirection.Horizontal
     controlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     controlLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    controlLayout.Padding = UDim.new(0, 10)
+    controlLayout.Padding = UDim.new(0, 12)
     controlLayout.Parent = controls
 
     local miniBtn = Instance.new("TextButton")
-    miniBtn.Size = UDim2.new(0, 14, 0, 14)
-    miniBtn.BackgroundColor3 = Color3.fromRGB(255, 190, 60) -- Yellow Minimize Button
+    miniBtn.Size = UDim2.new(0, 12, 0, 12)
+    miniBtn.BackgroundColor3 = Color3.fromRGB(200, 202, 205) -- Sleek matte gray minimize
     miniBtn.Text = ""
     miniBtn.BorderSizePixel = 0
     miniBtn.Parent = controls
     Instance.new("UICorner", miniBtn).CornerRadius = UDim.new(1, 0)
 
     local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 14, 0, 14)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 90, 90) -- Red Close Button
+    closeBtn.Size = UDim2.new(0, 12, 0, 12)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(35, 38, 45) -- High contrast charcoal close
     closeBtn.Text = ""
     closeBtn.BorderSizePixel = 0
     closeBtn.Parent = controls
     Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
 
-    -- Toggle Window System Function
     local function setWindowVisible(state)
         self.IsMinimized = not state
         mainFrame.Visible = state
@@ -161,43 +142,38 @@ function Lucidity:CreateWindow(config)
     end
 
     closeBtn.MouseButton1Click:Connect(function()
-        local t = TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), BackgroundTransparency = 1})
+        local t = TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0), BackgroundTransparency = 1})
         t:Play() t.Completed:Connect(function() screenGui:Destroy() end)
     end)
 
-    miniBtn.MouseButton1Click:Connect(function()
-        setWindowVisible(false)
-    end)
+    miniBtn.MouseButton1Click:Connect(function() setWindowVisible(false) end)
+    restoreBtn.MouseButton1Click:Connect(function() setWindowVisible(true) end)
 
-    restoreBtn.MouseButton1Click:Connect(function()
-        setWindowVisible(true)
-    end)
-
-    -- Desktop Keybind Engine ('P')
     UserInputService.InputBegan:Connect(function(input, processed)
         if not processed and input.KeyCode == Enum.KeyCode.P then
             setWindowVisible(self.IsMinimized)
         end
     end)
 
-    -- Clean Rounded Sidebar Left Frame
+    -- Brushed Sidebar Layout Panel
     local sidebar = Instance.new("Frame")
     sidebar.Size = UDim2.new(0, 190, 1, -66)
     sidebar.Position = UDim2.new(0, 12, 0, 54)
     sidebar.BackgroundColor3 = self.Theme.Sidebar
-    sidebar.BackgroundTransparency = 0.25
+    sidebar.BorderSizePixel = 0
     sidebar.Parent = mainFrame
     self.Sidebar = sidebar
-    Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 18)
+    Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 16)
+    Instance.new("UIStroke", sidebar).Color = self.Theme.Border
 
-    -- 🔍 GLOBAL REAL-TIME SEARCH BAR ENGINE
+    -- Minimalist Pure-White Search Interface
     local searchFrame = Instance.new("Frame")
     searchFrame.Size = UDim2.new(0, 166, 0, 34)
     searchFrame.Position = UDim2.new(0, 12, 0, 12)
-    searchFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    searchFrame.BackgroundColor3 = self.Theme.CardBackground
     searchFrame.Parent = sidebar
-    Instance.new("UICorner", searchFrame).CornerRadius = UDim.new(0, 10)
-    Instance.new("UIStroke", searchFrame).Color = Color3.fromRGB(230, 235, 250)
+    Instance.new("UICorner", searchFrame).CornerRadius = UDim.new(0, 8)
+    Instance.new("UIStroke", searchFrame).Color = self.Theme.Border
 
     local searchIcon = Instance.new("ImageLabel")
     searchIcon.Size = UDim2.new(0, 14, 0, 14)
@@ -211,7 +187,7 @@ function Lucidity:CreateWindow(config)
     searchBox.Size = UDim2.new(1, -34, 1, 0)
     searchBox.Position = UDim2.new(0, 30, 0, 0)
     searchBox.BackgroundTransparency = 1
-    searchBox.PlaceholderText = "Search features..."
+    searchBox.PlaceholderText = "Search..."
     searchBox.Text = ""
     searchBox.TextColor3 = self.Theme.Text
     searchBox.PlaceholderColor3 = self.Theme.MutedText
@@ -221,29 +197,28 @@ function Lucidity:CreateWindow(config)
     searchBox.Parent = searchFrame
 
     local sidebarLayout = Instance.new("UIListLayout")
-    sidebarLayout.Padding = UDim.new(0, 6)
+    sidebarLayout.Padding = UDim.new(0, 4)
     sidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     sidebarLayout.Parent = sidebar
     
     local sidebarPadding = Instance.new("UIPadding")
-    sidebarPadding.PaddingTop = UDim.new(0, 56) -- Space below search box
+    sidebarPadding.PaddingTop = UDim.new(0, 56)
     sidebarPadding.Parent = sidebar
 
-    -- Content Frame Panel
+    -- Right Content Dashboard Canvas Panel
     local mainDisplay = Instance.new("Frame")
     mainDisplay.Size = UDim2.new(1, -226, 1, -66)
     mainDisplay.Position = UDim2.new(0, 214, 0, 54)
-    mainDisplay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    mainDisplay.BackgroundTransparency = 0.3
+    mainDisplay.BackgroundColor3 = self.Theme.CardBackground
     mainDisplay.Parent = mainFrame
-    Instance.new("UICorner", mainDisplay).CornerRadius = UDim.new(0, 18)
+    Instance.new("UICorner", mainDisplay).CornerRadius = UDim.new(0, 16)
+    Instance.new("UIStroke", mainDisplay).Color = self.Theme.Border
     
     self.Pages = Instance.new("Folder")
     self.Pages.Parent = mainDisplay
 
     self:EnableDragging()
 
-    -- Real-time Filtering Engine Callback logic
     searchBox:GetPropertyChangedSignal("Text"):Connect(function()
         local query = string.lower(searchBox.Text)
         for _, item in pairs(self.Elements) do
@@ -252,26 +227,24 @@ function Lucidity:CreateWindow(config)
             else
                 local match = string.find(string.lower(item.Name), query)
                 item.Instance.Visible = (match ~= nil)
-                -- Automatically jump open to tab containing match if found
-                if match and item.TabButton then
-                    item.TabButton:FireClick()
-                end
+                if match and item.TabButton then item.TabButton:FireClick() end
             end
         end
     end)
 
-    -- Mandatory Settings Generator
+    -- ⚙️ CONFIG DROPDOWN REPLENTISHED TO SLIDER STATS (Locked 50% - 200%)
     task.spawn(function()
         local Settings = self:CreateTab("Settings", "settings")
-        Settings:CreateDropdown({
-            Name = "UI DPI Scaling",
-            Options = {"100%", "125%", "150%"},
-            Default = "100%"
-        }, function(selected)
-            if selected == "100%" then uiScale.Scale = 1.0
-            elseif selected == "125%" then uiScale.Scale = 1.25
-            elseif selected == "150%" then uiScale.Scale = 1.5
-            end
+        Settings:CreateSection("Client Adjustments")
+        
+        Settings:CreateSlider({
+            Name = "DPI Scaling Profile",
+            Min = 50,
+            Max = 200,
+            Default = 100,
+            Suffix = "%"
+        }, function(value)
+            uiScale.Scale = value / 100
         end)
     end)
 
@@ -309,7 +282,7 @@ function Lucidity:CreateTab(tabName, iconName)
     tabButton.Text = ""
     tabButton.BorderSizePixel = 0
     tabButton.Parent = self.Sidebar
-    Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 10)
+    Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 8)
 
     local tabLayout = Instance.new("UIListLayout")
     tabLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -340,16 +313,15 @@ function Lucidity:CreateTab(tabName, iconName)
     textLabel.Parent = tabButton
 
     local pageContainer = Instance.new("ScrollingFrame")
-    pageContainer.Size = UDim2.new(1, -20, 1, -20)
-    pageContainer.Position = UDim2.new(0, 10, 0, 10)
+    pageContainer.Size = UDim2.new(1, -24, 1, -24)
+    pageContainer.Position = UDim2.new(0, 12, 0, 12)
     pageContainer.BackgroundTransparency = 1
     pageContainer.Visible = false
-    pageContainer.ScrollBarThickness = 2
-    pageContainer.ScrollBarImageColor3 = theme.Accent
+    pageContainer.ScrollBarThickness = 0
     pageContainer.Parent = self.Pages
 
     local pageLayout = Instance.new("UIListLayout")
-    pageLayout.Padding = UDim.new(0, 8)
+    pageLayout.Padding = UDim.new(0, 10)
     pageLayout.Parent = pageContainer
     pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         pageContainer.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y)
@@ -359,15 +331,15 @@ function Lucidity:CreateTab(tabName, iconName)
         for _, page in pairs(self.Pages:GetChildren()) do page.Visible = false end
         for _, btn in pairs(self.Sidebar:GetChildren()) do
             if btn:IsA("TextButton") then
-                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 1}):Play()
                 if btn:FindFirstChild("TabText") then btn.TabText.TextColor3 = theme.MutedText end
                 if btn:FindFirstChild("Icon") then btn.Icon.ImageColor3 = theme.MutedText end
             end
         end
         pageContainer.Visible = true
-        TweenService:Create(tabButton, TweenInfo.new(0.2), {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(255,255,255)}):Play()
+        TweenService:Create(tabButton, TweenInfo.new(0.15), {BackgroundTransparency = 0, BackgroundColor3 = theme.CardBackground}):Play()
         textLabel.TextColor3 = theme.Text
-        if tabButton:FindFirstChild("Icon") then tabButton.Icon.ImageColor3 = theme.Accent end
+        if tabButton:FindFirstChild("Icon") then tabButton.Icon.ImageColor3 = theme.Active end
     end
 
     tabButton.MouseButton1Click:Connect(activateTab)
@@ -377,10 +349,10 @@ function Lucidity:CreateTab(tabName, iconName)
 
     function tabObject:CreateSection(sectionText)
         local sLabel = Instance.new("TextLabel")
-        sLabel.Size = UDim2.new(1, 0, 0, 24)
+        sLabel.Size = UDim2.new(1, 0, 0, 20)
         sLabel.BackgroundTransparency = 1
         sLabel.Text = string.upper(sectionText)
-        sLabel.TextColor3 = theme.Accent
+        sLabel.TextColor3 = theme.Text
         sLabel.Font = Enum.Font.GothamBold
         sLabel.TextSize = 11
         sLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -392,16 +364,16 @@ function Lucidity:CreateTab(tabName, iconName)
         local callback = callback or function() end
 
         local btnFrame = Instance.new("TextButton")
-        btnFrame.Size = UDim2.new(1, 0, 0, 42)
-        btnFrame.BackgroundColor3 = theme.CardBackground
+        btnFrame.Size = UDim2.new(1, 0, 0, 40)
+        btnFrame.BackgroundColor3 = theme.Sidebar
         btnFrame.Text = ""
         btnFrame.Parent = pageContainer
-        Instance.new("UICorner", btnFrame).CornerRadius = UDim.new(0, 10)
-        Instance.new("UIStroke", btnFrame).Color = Color3.fromRGB(235, 240, 250)
+        Instance.new("UICorner", btnFrame).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIStroke", btnFrame).Color = theme.Border
 
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(1, -20, 1, 0)
-        lbl.Position = UDim2.new(0, 12, 0, 0)
+        lbl.Position = UDim2.new(0, 14, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = btnText
         lbl.TextColor3 = theme.Text
@@ -411,91 +383,157 @@ function Lucidity:CreateTab(tabName, iconName)
         lbl.Parent = btnFrame
 
         btnFrame.MouseButton1Click:Connect(function()
-            TweenService:Create(btnFrame, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(240, 245, 255)}):Play()
-            task.wait(0.1)
-            TweenService:Create(btnFrame, TweenInfo.new(0.1), {BackgroundColor3 = theme.CardBackground}):Play()
+            TweenService:Create(btnFrame, TweenInfo.new(0.08), {BackgroundColor3 = theme.Border}):Play()
+            task.wait(0.08)
+            TweenService:Create(btnFrame, TweenInfo.new(0.08), {BackgroundColor3 = theme.Sidebar}):Play()
             task.spawn(callback)
         end)
 
-        -- Add to indexing global registry for searching
         table.insert(windowSelf.Elements, {Name = btnText, Instance = btnFrame, TabButton = tabObject})
     end
 
-    function tabObject:CreateDropdown(config, callback)
-        local dropName = config.Name or "Dropdown"
-        local options = config.Options or {}
-        local default = config.Default or options[1]
+    -- 🔳 NEW MONOCHROME TOGGLE COMPONENT
+    function tabObject:CreateToggle(config, callback)
+        local toggleName = config.Name or "Toggle Switch"
+        local default = config.Default or false
         local callback = callback or function() end
-        local open = false
+        local state = default
 
-        local dropFrame = Instance.new("Frame")
-        dropFrame.Size = UDim2.new(1, 0, 0, 42)
-        dropFrame.BackgroundColor3 = theme.CardBackground
-        dropFrame.ClipsDescendants = true
-        dropFrame.Parent = pageContainer
-        Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0, 10)
-        Instance.new("UIStroke", dropFrame).Color = Color3.fromRGB(235, 240, 250)
-
-        local trigger = Instance.new("TextButton")
-        trigger.Size = UDim2.new(1, 0, 0, 42)
-        trigger.BackgroundTransparency = 1
-        trigger.Text = ""
-        trigger.Parent = dropFrame
+        local toggleFrame = Instance.new("Frame")
+        toggleFrame.Size = UDim2.new(1, 0, 0, 40)
+        toggleFrame.BackgroundColor3 = theme.Sidebar
+        toggleFrame.Parent = pageContainer
+        Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIStroke", toggleFrame).Color = theme.Border
 
         local lbl = Instance.new("TextLabel")
-        lbl.Size = UDim2.new(0.5, 0, 0, 42)
-        lbl.Position = UDim2.new(0, 12, 0, 0)
+        lbl.Size = UDim2.new(0.7, 0, 1, 0)
+        lbl.Position = UDim2.new(0, 14, 0, 0)
         lbl.BackgroundTransparency = 1
-        lbl.Text = dropName
+        lbl.Text = toggleName
         lbl.TextColor3 = theme.Text
         lbl.Font = theme.Font
         lbl.TextSize = 13
         lbl.TextXAlignment = Enum.TextXAlignment.Left
-        lbl.Parent = dropFrame
+        lbl.Parent = toggleFrame
 
-        local selLbl = Instance.new("TextLabel")
-        selLbl.Size = UDim2.new(0.5, -30, 0, 42)
-        selLbl.Position = UDim2.new(0.5, 0, 0, 0)
-        selLbl.BackgroundTransparency = 1
-        selLbl.Text = default
-        selLbl.TextColor3 = theme.Accent
-        selLbl.Font = theme.Font
-        selLbl.TextSize = 13
-        selLbl.TextXAlignment = Enum.TextXAlignment.Right
-        selLbl.Parent = dropFrame
+        local switch = Instance.new("TextButton")
+        switch.Size = UDim2.new(0, 36, 0, 20)
+        switch.Position = UDim2.new(1, -50, 0.5, -10)
+        switch.BackgroundColor3 = state and theme.Active or Color3.fromRGB(200, 204, 210)
+        switch.Text = ""
+        switch.Parent = toggleFrame
+        Instance.new("UICorner", switch).CornerRadius = UDim.new(1, 0)
 
-        local listHolder = Instance.new("Frame")
-        listHolder.Size = UDim2.new(1, -20, 0, #options * 30)
-        listHolder.Position = UDim2.new(0, 10, 0, 42)
-        listHolder.BackgroundTransparency = 1
-        listHolder.Parent = dropFrame
-        Instance.new("UIListLayout", listHolder).Padding = UDim.new(0, 4)
+        local sliderDot = Instance.new("Frame")
+        sliderDot.Size = UDim2.new(0, 14, 0, 14)
+        sliderDot.Position = UDim2.new(state and 0.55 or 0.05, 2, 0.5, -7)
+        sliderDot.BackgroundColor3 = theme.CardBackground
+        sliderDot.Parent = switch
+        Instance.new("UICorner", sliderDot).CornerRadius = UDim.new(1, 0)
 
-        for _, opt in pairs(options) do
-            local oBtn = Instance.new("TextButton")
-            oBtn.Size = UDim2.new(1, 0, 0, 26)
-            oBtn.BackgroundColor3 = Color3.fromRGB(245, 247, 255)
-            oBtn.Text = opt
-            oBtn.TextColor3 = theme.Text
-            oBtn.Font = theme.Font
-            oBtn.TextSize = 12
-            oBtn.Parent = listHolder
-            Instance.new("UICorner", oBtn).CornerRadius = UDim.new(0, 6)
-
-            oBtn.MouseButton1Click:Connect(function()
-                selLbl.Text = opt open = false
-                TweenService:Create(dropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, 42)}):Play()
-                task.spawn(callback, opt)
-            end)
-        end
-
-        trigger.MouseButton1Click:Connect(function()
-            open = not open
-            local th = open and (42 + (#options * 30) + 10) or 42
-            TweenService:Create(dropFrame, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, th)}):Play()
+        switch.MouseButton1Click:Connect(function()
+            state = not state
+            TweenService:Create(switch, TweenInfo.new(0.15), {BackgroundColor3 = state and theme.Active or Color3.fromRGB(200, 204, 210)}):Play()
+            TweenService:Create(sliderDot, TweenInfo.new(0.15), {Position = UDim2.new(state and 0.55 or 0.05, 2, 0.5, -7)}):Play()
+            task.spawn(callback, state)
         end)
 
-        table.insert(windowSelf.Elements, {Name = dropName, Instance = dropFrame, TabButton = tabObject})
+        table.insert(windowSelf.Elements, {Name = toggleName, Instance = toggleFrame, TabButton = tabObject})
+    end
+
+    -- 🔳 NEW MATTE SMOOTH SLIDER COMPONENT
+    function tabObject:CreateSlider(config, callback)
+        local sliderName = config.Name or "Slider Adjust"
+        local min = config.Min or 0
+        local max = config.Max or 100
+        local default = config.Default or min
+        local suffix = config.Suffix or ""
+        local callback = callback or function() end
+        
+        local value = math.clamp(default, min, max)
+
+        local sliderFrame = Instance.new("Frame")
+        sliderFrame.Size = UDim2.new(1, 0, 0, 50)
+        sliderFrame.BackgroundColor3 = theme.Sidebar
+        sliderFrame.Parent = pageContainer
+        Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 8)
+        Instance.new("UIStroke", sliderFrame).Color = theme.Border
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0.6, 0, 0, 26)
+        lbl.Position = UDim2.new(0, 14, 0, 2)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = sliderName
+        lbl.TextColor3 = theme.Text
+        lbl.Font = theme.Font
+        lbl.TextSize = 13
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = sliderFrame
+
+        local valLbl = Instance.new("TextLabel")
+        valLbl.Size = UDim2.new(0.3, 0, 0, 26)
+        valLbl.Position = UDim2.new(0.7, -14, 0, 2)
+        valLbl.BackgroundTransparency = 1
+        valLbl.Text = tostring(value) .. suffix
+        valLbl.TextColor3 = theme.MutedText
+        valLbl.Font = theme.Font
+        valLbl.TextSize = 12
+        valLbl.TextXAlignment = Enum.TextXAlignment.Right
+        valLbl.Parent = sliderFrame
+
+        local track = Instance.new("TextButton")
+        track.Size = UDim2.new(1, -28, 0, 6)
+        track.Position = UDim2.new(0, 14, 1, -16)
+        track.BackgroundColor3 = Color3.fromRGB(215, 219, 225)
+        track.Text = ""
+        track.Parent = sliderFrame
+        Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+        local fill = Instance.new("Frame")
+        fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+        fill.BackgroundColor3 = theme.Active
+        fill.Parent = track
+        Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+        local handle = Instance.new("Frame")
+        handle.Size = UDim2.new(0, 12, 0, 12)
+        handle.Position = UDim2.new((value - min) / (max - min), -6, 0.5, -6)
+        handle.BackgroundColor3 = theme.CardBackground
+        handle.Parent = track
+        Instance.new("UICorner", handle).CornerRadius = UDim.new(1, 0)
+        Instance.new("UIStroke", handle).Color = theme.Active
+
+        local holding = false
+
+        local function updateSlider(input)
+            local percentage = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+            value = math.round(min + (percentage * (max - min)))
+            valLbl.Text = tostring(value) .. suffix
+            fill.Size = UDim2.new(percentage, 0, 1, 0)
+            handle.Position = UDim2.new(percentage, -6, 0.5, -6)
+            task.spawn(callback, value)
+        end
+
+        track.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                holding = true updateSlider(input)
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if holding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                updateSlider(input)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                holding = false
+            end
+        end)
+
+        table.insert(windowSelf.Elements, {Name = sliderName, Instance = sliderFrame, TabButton = tabObject})
     end
 
     return tabObject
