@@ -1,3 +1,8 @@
+-- ====================================================================
+-- LUCIDITY UI FRAMEWORK (COMPLETE VERSION)
+-- Premium Monochrome UI with Lucide Icon Mapping & Scale Management
+-- ====================================================================
+
 local Lucidity = {}
 Lucidity.__index = Lucidity
 
@@ -86,9 +91,11 @@ function Lucidity:Notify(config)
     TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 75)}):Play()
     
     task.delay(duration, function()
-        local t = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1})
-        t:Play()
-        t.Completed:Connect(function() card:Destroy() end)
+        if card and card.Parent then
+            local t = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1})
+            t:Play()
+            t.Completed:Connect(function() card:Destroy() end)
+        end
     end)
 end
 
@@ -202,6 +209,48 @@ function Lucidity:BuildMainInterface(windowName)
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
 
+    -- ❌ PREMIUM CLOSE / DESTROY UI BUTTON
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Name = "CloseButton"
+    closeBtn.Size = UDim2.new(0, 28, 0, 28)
+    closeBtn.Position = UDim2.new(1, -40, 0.5, -14)
+    closeBtn.BackgroundColor3 = self.Theme.CardBackground
+    closeBtn.Text = "×" 
+    closeBtn.TextColor3 = self.Theme.MutedText
+    closeBtn.Font = Enum.Font.GothamMedium
+    closeBtn.TextSize = 18
+    closeBtn.Parent = topBar
+    
+    local closeCorner = Instance.new("UICorner", closeBtn)
+    closeCorner.CornerRadius = UDim.new(0, 6)
+    local closeStroke = Instance.new("UIStroke", closeBtn)
+    closeStroke.Color = self.Theme.Border
+
+    closeBtn.MouseEnter:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.1), {
+            TextColor3 = Color3.fromRGB(239, 68, 68),
+            BackgroundColor3 = self.Theme.Border
+        }):Play()
+    end)
+
+    closeBtn.MouseLeave:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.1), {
+            TextColor3 = self.Theme.MutedText,
+            BackgroundColor3 = self.Theme.CardBackground
+        }):Play()
+    end)
+
+    closeBtn.MouseButton1Click:Connect(function()
+        local fadeTween = TweenService:Create(mainFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 650, 0, 430),
+            BackgroundTransparency = 1
+        })
+        fadeTween:Play()
+        fadeTween.Completed:Connect(function()
+            self.ScreenGui:Destroy()
+        end)
+    end)
+
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
     sidebar.Size = UDim2.new(0, 180, 1, -66)
@@ -232,7 +281,6 @@ function Lucidity:BuildMainInterface(windowName)
 
     -- ✨ GENERATE THE AUTOMATED COMPONENT SHOWCASE AND SETTINGS
     task.spawn(function()
-        -- Showcase Tab Container
         local Showcase = self:CreateTab("Element Showcase", "eye")
         
         Showcase:CreateSection("Basic Interactions")
@@ -257,11 +305,9 @@ function Lucidity:BuildMainInterface(windowName)
             print("Selected choice: ", choice)
         end)
 
-        -- Structural Settings Tab
         local Settings = self:CreateTab("Settings", "settings")
         Settings:CreateSection("Client Configurations")
         
-        -- Glitch-proof Dropdown UI Scale instead of continuous slider updates
         Settings:CreateDropdown({
             Name = "Interface UI Scale Profile",
             Options = {"75%", "100%", "125%", "150%"}
