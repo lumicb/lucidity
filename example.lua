@@ -5,7 +5,7 @@
 -- 1. Load the UI Library (Assuming it's saved locally or executed via loadstring)
 -- If you host main.lua on GitHub, replace this with your loadstring line:
 -- local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/..."))()
-local Lucidity = loadstring(readfile("main.lua"))()
+local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/main.lua"))()
 
 -- 2. Initialize the Main Window
 local Window = Lucidity:CreateWindow({
