@@ -204,10 +204,12 @@ function Lucidity:BuildMainInterface(windowName)
 
     -- Sidebar Panel
     local sidebar = Instance.new("Frame")
+    sidebar.Name = "Sidebar"
     sidebar.Size = UDim2.new(0, 180, 1, -66)
     sidebar.Position = UDim2.new(0, 12, 0, 54)
     sidebar.BackgroundColor3 = self.Theme.Sidebar
     sidebar.Parent = mainFrame
+    self.Sidebar = sidebar
     Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 10)
     Instance.new("UIStroke", sidebar).Color = self.Theme.Border
 
@@ -292,7 +294,7 @@ function Lucidity:CreateTab(tabName, iconName)
     tabButton.Size = UDim2.new(0, 160, 0, 36)
     tabButton.BackgroundTransparency = 1
     tabButton.Text = ""
-    tabButton.Parent = self.MainFrame.Frame.Sidebar -- Maps right directly to container layout
+    tabButton.Parent = windowSelf.Sidebar
     Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
 
     local tabLayout = Instance.new("UIListLayout")
@@ -329,7 +331,7 @@ function Lucidity:CreateTab(tabName, iconName)
     pageContainer.BackgroundTransparency = 1
     pageContainer.Visible = false
     pageContainer.ScrollBarThickness = 0
-    pageContainer.Parent = self.Pages
+    pageContainer.Parent = windowSelf.Pages
 
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.Padding = UDim.new(0, 8)
