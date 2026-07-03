@@ -1,45 +1,90 @@
--- Library
+-- Load Library
 local Lucidity = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/main.lua"))()
 
--- Main Window
+-- Create Window
 local Window = Lucidity:CreateWindow({
-    Name = "Lucidity Example Script", -- Name
-    ConfigName = "Lucidity_Example.json", -- Config Name
-    KeySystem = false, -- Set to true if you want to require a key
-    Key = "example" -- The password string if KeySystem is true
+    Name = "Lucidity Example Script",
+    ConfigName = "Lucidity_Example.json",
+    KeySystem = false,
+    Key = "example"
 })
 
--- 3. Create the Main / Tabs / Elements
-local MainTab = Window:CreateTab("Example", "")
+-- Create Tab
+local MainTab = Window:CreateTab("Main", "")
 
-MainTab:CreateSection("Example")
+-- Create Section
+MainTab:CreateSection("Examples")
 
+--------------------------------------------------
+-- Toggle Example
+--------------------------------------------------
 MainTab:CreateToggle({
     Name = "Example Toggle",
-    SaveName = "Example_Toggle", -- Unique key for auto-saving
+    SaveName = "Example_Toggle",
     Default = false
 }, function(state)
-    _G.Example = state
+    _G.ExampleToggle = state
+
     if state then
-        print("[Lucidity] Example Started.")
+        print("[Lucidity] Toggle enabled.")
     else
-        print("[Lucidity] Example Stopped.")
+        print("[Lucidity] Toggle disabled.")
     end
 end)
 
+--------------------------------------------------
+-- Button Example
+--------------------------------------------------
 MainTab:CreateButton({
     Name = "Example Button"
 }, function()
     Lucidity:Notify({
-        Title = "Example",
-        Content = "Example text",
+        Title = "Button Clicked",
+        Content = "You clicked the example button!",
         Duration = 2.5
     })
 end)
 
--- 5. Send a confirmation toast that the script finished executing
+--------------------------------------------------
+-- Slider Example
+--------------------------------------------------
+MainTab:CreateSlider({
+    Name = "WalkSpeed",
+    Min = 0,
+    Max = 100,
+    Default = 16
+}, function(value)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+
+    if character and character:FindFirstChild("Humanoid") then
+        character.Humanoid.WalkSpeed = value
+    end
+end)
+
+--------------------------------------------------
+-- Input Example
+--------------------------------------------------
+MainTab:CreateInput({
+    Name = "Target Player",
+    Placeholder = "Enter username..."
+}, function(text)
+    print("[Lucidity] Input:", text)
+end)
+
+--------------------------------------------------
+-- Dropdown Example
+--------------------------------------------------
+MainTab:CreateDropdown({
+    Name = "Select Option",
+    Options = {"Option 1", "Option 2", "Option 3"}
+}, function(selected)
+    print("[Lucidity] Selected:", selected)
+end)
+
+-- Final Notification
 Lucidity:Notify({
-    Title = "Script Finished Executing!",
-    Content = "Script is running smoothly!",
+    Title = "Lucidity Loaded",
+    Content = "Example script loaded successfully!",
     Duration = 4
 })
