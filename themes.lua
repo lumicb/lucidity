@@ -1,19 +1,26 @@
--- themes.lua
-local Themes = {}
+-- theme_manager.lua
+local ThemeManager = {}
 
-Themes.Default = {
-    WindowBg = Color3.fromRGB(20, 21, 26),
-    CardBackground = Color3.fromRGB(30, 31, 38),
-    Active = Color3.fromRGB(138, 180, 248), -- That nice active accent
-    Border = Color3.fromRGB(45, 47, 56),
-    Text = Color3.fromRGB(240, 240, 240),
-    MutedText = Color3.fromRGB(150, 155, 170),
-    Font = Enum.Font.Gotham
+ThemeManager.Theme = {
+    WindowBg = Color3.fromRGB(18, 19, 22),       -- Dark main wrapper background
+    Sidebar = Color3.fromRGB(24, 25, 30),        -- Slightly lighter left sidebar panel
+    CardBackground = Color3.fromRGB(30, 31, 38), -- Standard component block background 
+    Border = Color3.fromRGB(42, 44, 54),         -- Crisp frame outlines
+    Text = Color3.fromRGB(242, 244, 247),       -- High-contrast primary text
+    MutedText = Color3.fromRGB(138, 143, 154),  -- Secondary/placeholder labels
+    Active = Color3.fromRGB(255, 255, 255),     -- Toggled/selected states (pure white)
+    Font = Enum.Font.GothamMedium
 }
 
--- You can easily add more themes here later (like a cream or dark-plus theme)
-Themes.Cream = {
-    -- custom colors...
+-- Centralized Asset Pipeline (using modern workspace icons)
+ThemeManager.Icons = {
+    home = "rbxassetid://10734951102",
+    settings = "rbxassetid://10734950309",
+    combat = "rbxassetid://10747360634",
+    search = "rbxassetid://10734950791",
+    window = "rbxassetid://10723343385",
+    chevron = "rbxassetid://10734896828",
+    eye = "rbxassetid://10723345453"
 }
 
-return Themes
+return ThemeManager
