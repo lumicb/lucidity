@@ -37,9 +37,19 @@ success, result = pcall(function()
 end)
 local Notifications = success and result or nil
 
--- Set the active theme configuration
+-- Hook configurations globally on the library reference
 Lucidity.Theme = Themes.Default
 Lucidity.Notifications = Notifications
+
+-- Global Library Notification Forwarder
+function Lucidity:Notify(config)
+    if self.Notifications and self.Notifications.Notify then
+        self.Notifications:Notify(config)
+    else
+        -- Fallback print if notifications.lua fails to load or isn't structured yet
+        print(("[Lucidity Notification Fallback] %s: %s"):format(tostring(config.Title), tostring(config.Content)))
+    end
+end
 
 -- ====================================================================
 -- CORE DRAGGING LOGIC FUNCTION
@@ -84,8 +94,10 @@ end
 -- ====================================================================
 -- MAIN WINDOW CREATION
 -- ====================================================================
-function Lucidity:CreateWindow(titleText)
-    titleText = titleText or "LUCIDITY"
+function Lucidity:CreateWindow(options)
+    -- Safe type handling: accept either an options table or a simple string fallback
+    local config = type(options) == "table" and options or { Name = tostring(options or "LUCIDITY") }
+    local titleText = config.Name or "LUCIDITY"
     local theme = self.Theme
 
     -- Main GUI Canvas
@@ -94,7 +106,6 @@ function Lucidity:CreateWindow(titleText)
     screenGui.ResetOnSpawn = false
     screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     
-    -- Safety execution check for standard CoreGui access
     local targetParent = game:GetService("CoreGui") or Players.LocalPlayer:WaitForChild("PlayerGui")
     screenGui.Parent = targetParent
 
@@ -121,7 +132,7 @@ function Lucidity:CreateWindow(titleText)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = titleText
     titleLabel.TextColor3 = theme.Text
-    titleLabel.Font = theme.Font or Enum.Font.GothamBold
+    titleLabel.Font = Enum.Font.GothamBold
     titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
@@ -145,7 +156,6 @@ function Lucidity:CreateWindow(titleText)
     displayContainer.BackgroundTransparency = 1
     displayContainer.Parent = mainFrame
 
-    -- Tracker data structures
     local windowObj = {
         CurrentTab = nil,
         TabsList = {},
@@ -155,7 +165,7 @@ function Lucidity:CreateWindow(titleText)
     -- ====================================================================
     -- TAB MANIPULATION METHODS
     -- ====================================================================
-    function windowObj:CreateTab(tabName)
+    function windowObj:CreateTab(tabName, icon)
         self.TabCount = self.TabCount + 1
         local tabId = self.TabCount
         
@@ -166,7 +176,7 @@ function Lucidity:CreateWindow(titleText)
         navBtn.BackgroundTransparency = (tabId == 1) and 0 or 1
         navBtn.Text = tabName
         navBtn.TextColor3 = (tabId == 1) and theme.Text or theme.MutedText
-        navBtn.Font = theme.Font or Enum.Font.Gotham
+        navBtn.Font = theme.Font
         navBtn.TextSize = 12
         navBtn.LayoutOrder = tabId
         navBtn.Parent = sidebar
@@ -187,29 +197,32 @@ function Lucidity:CreateWindow(titleText)
         pLayout.Padding = UDim.new(0, 8)
         Instance.new("UIPadding", pageScroll).PaddingRight = UDim.new(0, 8)
 
-        -- Dynamic canvas resizer so scrolling never cuts off elements
         pLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             pageScroll.CanvasSize = UDim2.new(0, 0, 0, pLayout.AbsoluteContentSize.Y + 10)
         end)
 
-        -- Instanced unique track data for elements.lua components
-        local tabData = {
-            ComponentCount = 0,
-            NavButton = navBtn,
-            PageFrame = pageScroll
-        }
+        -- This is the table returned to the user script as "MainTab"
+        local tabObj = {}
 
-        -- Inject the element creators directly into this tab via the online file
-        if ElementsFactory and ElementsFactory.new then
-            ElementsFactory.new(tabData, pageScroll, theme)
+        -- Bind the dynamic external UI builders right into this tab instance
+        if ElementsFactory and ElementsFactory.InitTabMethods then
+            ElementsFactory.InitTabMethods(tabObj, pageScroll, theme)
+        else
+            -- Stub fallbacks to keep execution alive if elements.lua is empty/broken
+            function tabObj:CreateSection(name) print("[Lucidity Fallback] Section:", name) end
+            function tabObj:CreateToggle(opts, cb) print("[Lucidity Fallback] Toggle:", opts.Name) end
+            function tabObj:CreateButton(opts, cb) print("[Lucidity Fallback] Button:", opts.Name) end
+            function tabObj:CreateSlider(opts, cb) print("[Lucidity Fallback] Slider:", opts.Name) end
+            function tabObj:CreateInput(opts, cb) print("[Lucidity Fallback] Input:", opts.Name) end
+            function tabObj:CreateDropdown(opts, cb) print("[Lucidity Fallback] Dropdown:", opts.Name) end
         end
 
         -- Navigation Swap Event Handler
         navBtn.MouseButton1Click:Connect(function()
             for _, existingTab in pairs(windowObj.TabsList) do
-                existingTab.PageFrame.Visible = false
-                existingTab.NavButton.BackgroundTransparency = 1
-                existingTab.NavButton.TextColor3 = theme.MutedText
+                existingTab.Frame.Visible = false
+                existingTab.Btn.BackgroundTransparency = 1
+                existingTab.Btn.TextColor3 = theme.MutedText
             end
             pageScroll.Visible = true
             navBtn.BackgroundTransparency = 0
@@ -217,8 +230,8 @@ function Lucidity:CreateWindow(titleText)
             navBtn.TextColor3 = theme.Text
         end)
 
-        table.insert(windowObj.TabsList, tabData)
-        return tabData
+        table.insert(windowObj.TabsList, {Btn = navBtn, Frame = pageScroll})
+        return tabObj
     end
 
     return windowObj
