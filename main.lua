@@ -7,19 +7,90 @@ local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 
--- Remote Module Ingestion via loadstring
-local ThemeModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/themes.lua"))()
-local NotifModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/notifications.lua"))()
+Lucidity.Theme = {
+    WindowBg = Color3.fromRGB(18, 19, 22),
+    Sidebar = Color3.fromRGB(24, 25, 30),
+    CardBackground = Color3.fromRGB(30, 31, 38),
+    Border = Color3.fromRGB(42, 44, 54),
+    Text = Color3.fromRGB(242, 244, 247),
+    MutedText = Color3.fromRGB(138, 143, 154),
+    Active = Color3.fromRGB(255, 255, 255),
+    Font = Enum.Font.GothamMedium
+}
 
--- Inherit global properties from loaded sub-modules
-Lucidity.Theme = ThemeModule.Theme
-Lucidity.Icons = ThemeModule.Icons
+local Icons = {
+    home = "rbxassetid://10734951102",
+    settings = "rbxassetid://10734950309",
+    combat = "rbxassetid://10747360634",
+    search = "rbxassetid://10734950791",
+    window = "rbxassetid://10723343385",
+    chevron = "rbxassetid://10734896828",
+    eye = "rbxassetid://10723345453"
+}
 
 function Lucidity:Notify(config)
-    if not self.NotificationEngine then
-        self.NotificationEngine = NotifModule.new(self.ScreenGui)
+    local title = config.Title or "Notification"
+    local content = config.Content or ""
+    local duration = config.Duration or 3
+    
+    if not self.ScreenGui then return end -- Guard clause if window isn't created yet
+    
+    if not self.NotifContainer then
+        local notifContainer = Instance.new("Frame")
+        notifContainer.Name = "LucidityNotifications"
+        notifContainer.Size = UDim2.new(0, 280, 1, -40)
+        notifContainer.Position = UDim2.new(1, -300, 0, 20)
+        notifContainer.BackgroundTransparency = 1
+        notifContainer.Parent = self.ScreenGui
+        
+        local layout = Instance.new("UIListLayout")
+        layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+        layout.Padding = UDim.new(0, 10)
+        layout.Parent = notifContainer
+        self.NotifContainer = notifContainer
     end
-    self.NotificationEngine:Notify(config)
+
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, 0, 0, 0)
+    card.BackgroundColor3 = self.Theme.CardBackground
+    card.ClipsDescendants = true
+    card.Parent = self.NotifContainer
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
+    Instance.new("UIStroke", card).Color = self.Theme.Border
+
+    local lblTitle = Instance.new("TextLabel")
+    lblTitle.Size = UDim2.new(1, -24, 0, 24)
+    lblTitle.Position = UDim2.new(0, 12, 0, 6)
+    lblTitle.BackgroundTransparency = 1
+    lblTitle.Text = title
+    lblTitle.TextColor3 = self.Theme.Text
+    lblTitle.Font = Enum.Font.GothamBold
+    lblTitle.TextSize = 13
+    lblTitle.TextXAlignment = Enum.TextXAlignment.Left
+    lblTitle.Parent = card
+
+    local lblContent = Instance.new("TextLabel")
+    lblContent.Size = UDim2.new(1, -24, 1, -36)
+    lblContent.Position = UDim2.new(0, 12, 0, 30)
+    lblContent.BackgroundTransparency = 1
+    lblContent.Text = content
+    lblContent.TextColor3 = self.Theme.MutedText
+    lblContent.Font = self.Theme.Font
+    lblContent.TextSize = 11
+    lblContent.TextWrapped = true
+    lblContent.TextXAlignment = Enum.TextXAlignment.Left
+    lblContent.TextYAlignment = Enum.TextYAlignment.Top
+    lblContent.Parent = card
+
+    TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, 75)}):Play()
+    
+    task.delay(duration, function()
+        if card and card.Parent then
+            local t = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1})
+            t:Play()
+            t.Completed:Connect(function() card:Destroy() end)
+        end
+    end)
 end
 
 function Lucidity:CreateWindow(config)
@@ -28,11 +99,12 @@ function Lucidity:CreateWindow(config)
     local hasKeySystem = config.KeySystem or false
     local validKey = config.Key or ""
     
+    -- Instantiate object first to prevent scoping confusion
     local instance = setmetatable({}, Lucidity)
+    instance.ConfigName = config.ConfigName or "LucidityConfig.json"
     instance.Elements = {}
     instance.ConfigData = {}
     instance.TabCount = 0
-    instance.ConfigName = config.ConfigName or "LucidityConfig.json"
     
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "Lucidity_" .. HttpService:GenerateGUID(false)
@@ -233,27 +305,15 @@ function Lucidity:EnableDragging()
     local dragHandle = self.TopBar
     local gui = self.MainFrame
     local dragging, dragInput, dragStart, startPos
-    
     dragHandle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true 
-            dragStart = input.Position 
-            startPos = gui.Position
-            
-            input.Changed:Connect(function() 
-                if input.UserInputState == Enum.UserInputState.End then 
-                    dragging = false 
-                end 
-            end)
+            dragging = true dragStart = input.Position startPos = gui.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
         end
     end)
-    
     dragHandle.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
-            dragInput = input 
-        end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
     end)
-    
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - dragStart
@@ -303,12 +363,12 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
     tabLayout.Parent = tabButton
     Instance.new("UIPadding", tabButton).PaddingLeft = UDim.new(0, 12)
 
-    if iconName and self.Icons[string.lower(iconName)] then
+    if iconName and Icons[string.lower(iconName)] then
         local iconImg = Instance.new("ImageLabel")
         iconImg.Name = "Icon"
         iconImg.Size = UDim2.new(0, 16, 0, 16)
         iconImg.BackgroundTransparency = 1
-        iconImg.Image = self.Icons[string.lower(iconName)]
+        iconImg.Image = Icons[string.lower(iconName)]
         iconImg.ImageColor3 = theme.MutedText
         iconImg.Parent = tabButton
     end
@@ -340,9 +400,11 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.Padding = UDim.new(0, 7)
     pageLayout.Parent = pageContainer
-    pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    
+    local function updateCanvas()
         pageContainer.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 28)
-    end)
+    end
+    pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
 
     local function activateTab()
         for _, page in pairs(windowSelf.Pages:GetChildren()) do page.Visible = false end
@@ -554,19 +616,14 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         track.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                holding = true 
-                updateSlider(input)
+                holding = true updateSlider(input)
             end
         end)
         UserInputService.InputChanged:Connect(function(input)
-            if holding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then 
-                updateSlider(input) 
-            end
+            if holding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateSlider(input) end
         end)
         UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-                holding = false 
-            end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holding = false end
         end)
     end
 
@@ -649,7 +706,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         chev.Size = UDim2.new(0, 14, 0, 14)
         chev.Position = UDim2.new(1, -26, 0.5, -7)
         chev.BackgroundTransparency = 1
-        chev.Image = self.Icons.chevron
+        chev.Image = Icons.chevron
         chev.ImageColor3 = theme.MutedText
         chev.Parent = headerBtn
 
@@ -686,10 +743,13 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         headerBtn.MouseButton1Click:Connect(function()
             expanded = not expanded
-            local totalPadding = math.max(0, (#options - 1) * 4)
-            local targetSize = expanded and (48 + (#options * 26) + totalPadding) or 40
+            local targetSize = expanded and (46 + (#options * 30)) or 40
             TweenService:Create(dropFrame, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, targetSize)}):Play()
             TweenService:Create(chev, TweenInfo.new(0.15), {Rotation = expanded and 180 or 0}):Play()
+            
+            -- Force Canvas calculation to refresh on layout animations
+            task.wait(0.15)
+            updateCanvas()
         end)
     end
 
