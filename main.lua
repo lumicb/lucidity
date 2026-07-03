@@ -1,237 +1,95 @@
 -- main.lua
 local Lucidity = {}
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 
--- ====================================================================
--- DYNAMIC MODULE LOADING (GitHub Integration)
--- ====================================================================
-local success, result
+-- Load Modules
+local Themes = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/themes.lua"))()
+local Elements = loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/elements.lua"))()
+-- Notifications would go here
 
--- Load Themes
-success, result = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/themes.lua"))()
-end)
-local Themes = success and result or {
-    Default = {
-        WindowBg = Color3.fromRGB(20, 21, 26),
-        CardBackground = Color3.fromRGB(30, 31, 38),
-        Active = Color3.fromRGB(138, 180, 248),
-        Border = Color3.fromRGB(45, 47, 56),
-        Text = Color3.fromRGB(240, 240, 240),
-        MutedText = Color3.fromRGB(150, 155, 170),
-        Font = Enum.Font.Gotham
-    }
-}
-
--- Load Elements Factory
-success, result = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/elements.lua"))()
-end)
-local ElementsFactory = success and result or nil
-
--- Load Notifications System
-success, result = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/lumicb/lucidity/refs/heads/main/notifications.lua"))()
-end)
-local Notifications = success and result or nil
-
--- Hook configurations globally on the library reference
 Lucidity.Theme = Themes.Default
-Lucidity.Notifications = Notifications
 
--- Global Library Notification Forwarder
-function Lucidity:Notify(config)
-    if self.Notifications and self.Notifications.Notify then
-        self.Notifications:Notify(config)
-    else
-        -- Fallback print if notifications.lua fails to load or isn't structured yet
-        print(("[Lucidity Notification Fallback] %s: %s"):format(tostring(config.Title), tostring(config.Content)))
-    end
-end
-
--- ====================================================================
--- CORE DRAGGING LOGIC FUNCTION
--- ====================================================================
-local function makeDraggable(windowFrame, dragBar)
-    local dragging = false
-    local dragInput, dragStart, startPos
-
-    dragBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = windowFrame.Position
-            
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    dragBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            windowFrame.Position = UDim2.new(
-                startPos.X.Scale, 
-                startPos.X.Offset + delta.X, 
-                startPos.Y.Scale, 
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
--- ====================================================================
--- MAIN WINDOW CREATION
--- ====================================================================
 function Lucidity:CreateWindow(options)
-    -- Safe type handling: accept either an options table or a simple string fallback
-    local config = type(options) == "table" and options or { Name = tostring(options or "LUCIDITY") }
-    local titleText = config.Name or "LUCIDITY"
-    local theme = self.Theme
+    local config = type(options) == "table" and options or { Name = "LUCIDITY" }
+    local theme = Lucidity.Theme
 
-    -- Main GUI Canvas
-    local screenGui = Instance.new("ScreenGui")
+    -- ScreenGui
+    local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
     screenGui.Name = "Lucidity_Framework"
-    screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    
-    local targetParent = game:GetService("CoreGui") or Players.LocalPlayer:WaitForChild("PlayerGui")
-    screenGui.Parent = targetParent
 
-    -- Base Window Frame
-    local mainFrame = Instance.new("Frame")
+    -- Window
+    local mainFrame = Instance.new("Frame", screenGui)
     mainFrame.Size = UDim2.new(0, 550, 0, 360)
     mainFrame.Position = UDim2.new(0.5, -275, 0.5, -180)
     mainFrame.BackgroundColor3 = theme.WindowBg
-    mainFrame.BorderSizePixel = 0
-    mainFrame.Parent = screenGui
     Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
-    Instance.new("UIStroke", mainFrame).Color = theme.Border
 
-    -- Top Header Bar (Acts as the drag anchor)
-    local topBar = Instance.new("Frame")
+    -- Top Bar (Visuals added here)
+    local topBar = Instance.new("Frame", mainFrame)
     topBar.Size = UDim2.new(1, 0, 0, 40)
     topBar.BackgroundTransparency = 1
-    topBar.Parent = mainFrame
-    makeDraggable(mainFrame, topBar)
 
-    local titleLabel = Instance.new("TextLabel")
+    local titleLabel = Instance.new("TextLabel", topBar)
     titleLabel.Size = UDim2.new(1, -100, 1, 0)
     titleLabel.Position = UDim2.new(0, 16, 0, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = titleText
+    titleLabel.Text = config.Name
     titleLabel.TextColor3 = theme.Text
-    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.Font = theme.Font
     titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = topBar
 
-    -- Sidebar Container (For Tab Navigation)
-    local sidebar = Instance.new("Frame")
+    -- Close Button
+    local closeBtn = Instance.new("TextButton", topBar)
+    closeBtn.Size = UDim2.new(0, 40, 0, 40)
+    closeBtn.Position = UDim2.new(1, -40, 0, 0)
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.Text = "×"
+    closeBtn.TextColor3 = theme.Text
+    closeBtn.TextSize = 18
+    closeBtn.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+
+    -- Container for Tabs
+    local sidebar = Instance.new("Frame", mainFrame)
     sidebar.Size = UDim2.new(0, 150, 1, -40)
     sidebar.Position = UDim2.new(0, 0, 0, 40)
     sidebar.BackgroundTransparency = 1
-    sidebar.Parent = mainFrame
+    Instance.new("UIListLayout", sidebar).Padding = UDim.new(0, 4)
 
-    local sLayout = Instance.new("UIListLayout", sidebar)
-    sLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    sLayout.Padding = UDim.new(0, 4)
-    Instance.new("UIPadding", sidebar).PaddingLeft = UDim.new(0, 8)
-
-    -- Right Side Content Container (Where pages go)
-    local displayContainer = Instance.new("Frame")
+    local displayContainer = Instance.new("Frame", mainFrame)
     displayContainer.Size = UDim2.new(1, -160, 1, -50)
     displayContainer.Position = UDim2.new(0, 150, 0, 40)
     displayContainer.BackgroundTransparency = 1
-    displayContainer.Parent = mainFrame
 
-    local windowObj = {
-        CurrentTab = nil,
-        TabsList = {},
-        TabCount = 0
-    }
+    local windowObj = { TabCount = 0 }
 
-    -- ====================================================================
-    -- TAB MANIPULATION METHODS
-    -- ====================================================================
-    function windowObj:CreateTab(tabName, icon)
-        self.TabCount = self.TabCount + 1
-        local tabId = self.TabCount
+    function windowObj:CreateTab(tabName)
+        windowObj.TabCount += 1
+        local tabData = { ComponentCount = 0 }
         
-        -- 1. Create the Sidebar Navigation Button
-        local navBtn = Instance.new("TextButton")
+        local navBtn = Instance.new("TextButton", sidebar)
         navBtn.Size = UDim2.new(1, -8, 0, 32)
-        navBtn.BackgroundColor3 = (tabId == 1) and theme.CardBackground or Color3.fromRGB(0,0,0)
-        navBtn.BackgroundTransparency = (tabId == 1) and 0 or 1
         navBtn.Text = tabName
-        navBtn.TextColor3 = (tabId == 1) and theme.Text or theme.MutedText
-        navBtn.Font = theme.Font
-        navBtn.TextSize = 12
-        navBtn.LayoutOrder = tabId
-        navBtn.Parent = sidebar
+        navBtn.TextColor3 = theme.Text
+        navBtn.BackgroundColor3 = theme.CardBackground
         Instance.new("UICorner", navBtn).CornerRadius = UDim.new(0, 6)
 
-        -- 2. Create the scrolling canvas container for this specific page
-        local pageScroll = Instance.new("ScrollingFrame")
+        local pageScroll = Instance.new("ScrollingFrame", displayContainer)
         pageScroll.Size = UDim2.new(1, 0, 1, 0)
         pageScroll.BackgroundTransparency = 1
-        pageScroll.BorderSizePixel = 0
-        pageScroll.ScrollBarThickness = 3
-        pageScroll.ScrollBarImageColor3 = theme.Border
-        pageScroll.Visible = (tabId == 1)
-        pageScroll.Parent = displayContainer
+        pageScroll.Visible = (windowObj.TabCount == 1)
+        Instance.new("UIListLayout", pageScroll).Padding = UDim.new(0, 8)
 
-        local pLayout = Instance.new("UIListLayout", pageScroll)
-        pLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        pLayout.Padding = UDim.new(0, 8)
-        Instance.new("UIPadding", pageScroll).PaddingRight = UDim.new(0, 8)
+        -- HERE IS THE FIX: Connecting to the elements module
+        Elements.Load(tabData, pageScroll, theme)
 
-        pLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            pageScroll.CanvasSize = UDim2.new(0, 0, 0, pLayout.AbsoluteContentSize.Y + 10)
-        end)
-
-        -- This is the table returned to the user script as "MainTab"
-        local tabObj = {}
-
-        -- Bind the dynamic external UI builders right into this tab instance
-        if ElementsFactory and ElementsFactory.InitTabMethods then
-            ElementsFactory.InitTabMethods(tabObj, pageScroll, theme)
-        else
-            -- Stub fallbacks to keep execution alive if elements.lua is empty/broken
-            function tabObj:CreateSection(name) print("[Lucidity Fallback] Section:", name) end
-            function tabObj:CreateToggle(opts, cb) print("[Lucidity Fallback] Toggle:", opts.Name) end
-            function tabObj:CreateButton(opts, cb) print("[Lucidity Fallback] Button:", opts.Name) end
-            function tabObj:CreateSlider(opts, cb) print("[Lucidity Fallback] Slider:", opts.Name) end
-            function tabObj:CreateInput(opts, cb) print("[Lucidity Fallback] Input:", opts.Name) end
-            function tabObj:CreateDropdown(opts, cb) print("[Lucidity Fallback] Dropdown:", opts.Name) end
-        end
-
-        -- Navigation Swap Event Handler
         navBtn.MouseButton1Click:Connect(function()
-            for _, existingTab in pairs(windowObj.TabsList) do
-                existingTab.Frame.Visible = false
-                existingTab.Btn.BackgroundTransparency = 1
-                existingTab.Btn.TextColor3 = theme.MutedText
-            end
+            for _, v in pairs(displayContainer:GetChildren()) do v.Visible = false end
             pageScroll.Visible = true
-            navBtn.BackgroundTransparency = 0
-            navBtn.BackgroundColor3 = theme.CardBackground
-            navBtn.TextColor3 = theme.Text
         end)
 
-        table.insert(windowObj.TabsList, {Btn = navBtn, Frame = pageScroll})
-        return tabObj
+        return tabData
     end
 
     return windowObj
