@@ -198,16 +198,35 @@ function Lucidity:UpdateThemeDisplay(newPalette)
     self.Theme = newPalette
     self.MainFrame.BackgroundColor3 = newPalette.WindowBg
     self.MainFrame.UIStroke.Color = newPalette.Border
-    self.TopBar.TextLabel.TextColor3 = newPalette.Text
-    self.Sidebar.BackgroundColor3 = newPalette.Sidebar
-    self.Sidebar.UIStroke.Color = newPalette.Border
-    self.Sidebar.Parent:FindFirstChildOfClass("Frame").BackgroundColor3 = newPalette.Sidebar
-    self.Sidebar.Parent:FindFirstChildOfClass("Frame").UIStroke.Color = newPalette.Border
+
+    if self.TitleLabel then
+        self.TitleLabel.TextColor3 = newPalette.Text
+    end
+
+    if self.Sidebar then
+        self.Sidebar.BackgroundColor3 = newPalette.Sidebar
+        self.Sidebar.UIStroke.Color = newPalette.Border
+    end
+
+    if self.MainDisplay then
+        self.MainDisplay.BackgroundColor3 = newPalette.Sidebar
+        self.MainDisplay.UIStroke.Color = newPalette.Border
+    end
 
     for _, v in pairs(self.ScreenGui:GetDescendants()) do
         if v:IsA("Frame") or v:IsA("TextButton") or v:IsA("TextBox") or v:IsA("ScrollingFrame") then
-            if v.Name == "MainFrame" or v.Name == "Sidebar" or v.Parent.Name == "MainDisplay" then continue end
-            if v:IsA("TextButton") and v.Parent.Name == "Sidebar" then
+            if v.Name == "MainFrame" or v.Name == "Sidebar" or v.Name == "MainDisplay" then
+                if v:IsA("Frame") then
+                    if v.Name == "MainDisplay" then
+                        v.BackgroundColor3 = newPalette.Sidebar
+                    elseif v.Name == "Sidebar" then
+                        v.BackgroundColor3 = newPalette.Sidebar
+                    else
+                        v.BackgroundColor3 = newPalette.WindowBg
+                    end
+                end
+                if v:FindFirstChildOfClass("UIStroke") then v:FindFirstChildOfClass("UIStroke").Color = newPalette.Border end
+            elseif v:IsA("TextButton") and v.Parent and v.Parent.Name == "Sidebar" then
                 if v.BackgroundTransparency < 1 then v.BackgroundColor3 = newPalette.CardBackground end
                 if v:FindFirstChild("TabText") then v.TabText.TextColor3 = (v.BackgroundTransparency < 1) and newPalette.Text or newPalette.MutedText end
                 if v:FindFirstChild("Icon") then v.Icon.ImageColor3 = (v.BackgroundTransparency < 1) and newPalette.Text or newPalette.MutedText end
@@ -217,8 +236,10 @@ function Lucidity:UpdateThemeDisplay(newPalette)
                 if v.Name == "SectionHeader" then v.TextColor3 = newPalette.MutedText else v.TextColor3 = newPalette.Text end
             elseif v:IsA("TextBox") or v.Name == "ToggleSwitch" or v.Name == "SliderTrack" then
                 v.BackgroundColor3 = newPalette.WindowBg
-            elseif v.Parent:IsA("ScrollingFrame") and (v:IsA("Frame") or v:IsA("TextButton")) and v.Name ~= "ToggleSwitch" and v.Name ~= "SliderTrack" then
+            elseif v.Parent and v.Parent:IsA("ScrollingFrame") and (v:IsA("Frame") or v:IsA("TextButton")) and v.Name ~= "ToggleSwitch" and v.Name ~= "SliderTrack" then
                 v.BackgroundColor3 = newPalette.CardBackground
+            elseif v:IsA("ScrollingFrame") then
+                v.BackgroundColor3 = newPalette.WindowBg
             end
         end
     end
@@ -248,8 +269,9 @@ function Lucidity:BuildMainInterface(windowName)
     self.TopBar = topBar
 
     local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
     titleLabel.Size = UDim2.new(0.5, 0, 1, 0)
-    titleLabel.Position = UDim2.new(0, 20, 0, 0)
+    titleLabel.Position = UDim2.new(0, 84, 0, 0)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = windowName
     titleLabel.TextColor3 = self.Theme.Text
@@ -257,31 +279,48 @@ function Lucidity:BuildMainInterface(windowName)
     titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = topBar
+    self.TitleLabel = titleLabel
 
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Name = "CloseButton"
-    closeBtn.Size = UDim2.new(0, 28, 0, 28)
-    closeBtn.Position = UDim2.new(1, -40, 0.5, -14)
-    closeBtn.BackgroundColor3 = self.Theme.CardBackground
-    closeBtn.Text = "×" 
-    closeBtn.TextColor3 = self.Theme.MutedText
-    closeBtn.Font = Enum.Font.GothamMedium
-    closeBtn.TextSize = 18
-    closeBtn.Parent = topBar
-    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
-    Instance.new("UIStroke", closeBtn).Color = self.Theme.Border
+    local controlBar = Instance.new("Frame")
+    controlBar.Name = "WindowControls"
+    controlBar.Size = UDim2.new(0, 64, 0, 16)
+    controlBar.Position = UDim2.new(0, 16, 0, 17)
+    controlBar.BackgroundTransparency = 1
+    controlBar.Parent = topBar
 
-    closeBtn.MouseEnter:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(239, 68, 68), BackgroundColor3 = self.Theme.Border}):Play()
-    end)
-    closeBtn.MouseLeave:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.1), {TextColor3 = self.Theme.MutedText, BackgroundColor3 = self.Theme.CardBackground}):Play()
-    end)
-    closeBtn.MouseButton1Click:Connect(function()
-        local fadeTween = TweenService:Create(mainFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 650, 0, 430), BackgroundTransparency = 1})
-        fadeTween:Play()
-        fadeTween.Completed:Connect(function() self.ScreenGui:Destroy() end)
-    end)
+    local controlColors = {
+        Color3.fromRGB(255, 95, 86),
+        Color3.fromRGB(255, 189, 46),
+        Color3.fromRGB(39, 201, 63)
+    }
+
+    for index, color in ipairs(controlColors) do
+        local controlBtn = Instance.new("TextButton")
+        controlBtn.Name = index == 1 and "CloseButton" or "WindowControlButton"
+        controlBtn.Size = UDim2.new(0, 12, 0, 12)
+        controlBtn.Position = UDim2.new(0, (index - 1) * 18, 0, 0)
+        controlBtn.BackgroundColor3 = color
+        controlBtn.Text = ""
+        controlBtn.Parent = controlBar
+        Instance.new("UICorner", controlBtn).CornerRadius = UDim2.new(1, 0)
+        Instance.new("UIStroke", controlBtn).Color = self.Theme.Border
+
+        if index == 1 then
+            controlBtn.MouseEnter:Connect(function()
+                TweenService:Create(controlBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(232, 64, 64)}):Play()
+            end)
+            controlBtn.MouseLeave:Connect(function()
+                TweenService:Create(controlBtn, TweenInfo.new(0.1), {BackgroundColor3 = color}):Play()
+            end)
+            controlBtn.MouseButton1Click:Connect(function()
+                local fadeTween = TweenService:Create(mainFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 650, 0, 430), BackgroundTransparency = 1})
+                fadeTween:Play()
+                fadeTween.Completed:Connect(function()
+                    self.ScreenGui.Enabled = false
+                end)
+            end)
+        end
+    end
 
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
@@ -306,8 +345,9 @@ function Lucidity:BuildMainInterface(windowName)
     mainDisplay.Position = UDim2.new(0, 204, 0, 54)
     mainDisplay.BackgroundColor3 = self.Theme.Sidebar
     mainDisplay.Parent = mainFrame
-    Instance.new("UICorner", mainDisplay).CornerRadius = UDim.new(0, 10)
+    Instance.new("UICorner", mainDisplay).CornerRadius = UDim2.new(0, 10)
     Instance.new("UIStroke", mainDisplay).Color = self.Theme.Border
+    self.MainDisplay = mainDisplay
 
     self.Pages = Instance.new("Folder", mainDisplay)
     self:EnableDragging()
@@ -324,7 +364,7 @@ function Lucidity:BuildMainInterface(windowName)
 
     Settings:CreateSection("Client Configurations")
     
-    local antiAfkEnabled = false
+    local antiAfkEnabled = true
     LocalPlayer.Idled:Connect(function()
         if antiAfkEnabled then
             VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
@@ -340,6 +380,8 @@ function Lucidity:BuildMainInterface(windowName)
     }, function(state)
         antiAfkEnabled = state
     end)
+
+    antiAfkEnabled = true
 
     Settings:CreateDropdown({
         Name = "Interface UI Scale Profile",
@@ -435,9 +477,12 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
     local pageContainer = Instance.new("ScrollingFrame")
     pageContainer.Size = UDim2.new(1, 0, 1, 0)
-    pageContainer.BackgroundTransparency = 1
+    pageContainer.BackgroundColor3 = windowSelf.Theme.WindowBg
+    pageContainer.BackgroundTransparency = 0
     pageContainer.Visible = false
     pageContainer.ScrollBarThickness = 0
+    pageContainer.ClipsDescendants = true
+    pageContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
     pageContainer.Parent = windowSelf.Pages
 
     local pPadding = Instance.new("UIPadding", pageContainer)
@@ -446,7 +491,14 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.Padding = UDim.new(0, 7)
+    pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
     pageLayout.Parent = pageContainer
+
+    local nextLayoutOrder = 0
+    local function getNextLayoutOrder()
+        nextLayoutOrder = nextLayoutOrder + 1
+        return nextLayoutOrder
+    end
     
     local function updateCanvas()
         pageContainer.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 28)
@@ -476,6 +528,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
     function tabObject:CreateSection(sectionText)
         local sLabel = Instance.new("TextLabel")
+        sLabel.LayoutOrder = getNextLayoutOrder()
         sLabel.Name = "SectionHeader"
         sLabel.Size = UDim2.new(1, 0, 0, 24)
         sLabel.BackgroundTransparency = 1
@@ -493,6 +546,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         local callback = callback or function() end
 
         local btnFrame = Instance.new("TextButton")
+        btnFrame.LayoutOrder = getNextLayoutOrder()
         btnFrame.Size = UDim2.new(1, 0, 0, 40)
         btnFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         btnFrame.Text = ""
@@ -531,6 +585,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         local state = default
 
         local toggleFrame = Instance.new("Frame")
+        toggleFrame.LayoutOrder = getNextLayoutOrder()
         toggleFrame.Size = UDim2.new(1, 0, 0, 40)
         toggleFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         toggleFrame.Parent = pageContainer
@@ -598,6 +653,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         local value = math.clamp(default, min, max)
 
         local sliderFrame = Instance.new("Frame")
+        sliderFrame.LayoutOrder = getNextLayoutOrder()
         sliderFrame.Size = UDim2.new(1, 0, 0, 50)
         sliderFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         sliderFrame.Parent = pageContainer
@@ -683,6 +739,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         local callback = callback or function() end
 
         local inputFrame = Instance.new("Frame")
+        inputFrame.LayoutOrder = getNextLayoutOrder()
         inputFrame.Size = UDim2.new(1, 0, 0, 40)
         inputFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         inputFrame.Parent = pageContainer
@@ -727,6 +784,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         local expanded = false
 
         local dropFrame = Instance.new("Frame")
+        dropFrame.LayoutOrder = getNextLayoutOrder()
         dropFrame.Size = UDim2.new(1, 0, 0, 40)
         dropFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         dropFrame.ClipsDescendants = true
