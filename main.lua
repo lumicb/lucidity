@@ -33,7 +33,7 @@ function Lucidity:Notify(config)
     local content = config.Content or ""
     local duration = config.Duration or 3
     
-    if not self.ScreenGui then return end -- Guard clause if window isn't created yet
+    if not self.ScreenGui then return end
     
     if not self.NotifContainer then
         local notifContainer = Instance.new("Frame")
@@ -99,7 +99,6 @@ function Lucidity:CreateWindow(config)
     local hasKeySystem = config.KeySystem or false
     local validKey = config.Key or ""
     
-    -- Instantiate object first to prevent scoping confusion
     local instance = setmetatable({}, Lucidity)
     instance.ConfigName = config.ConfigName or "LucidityConfig.json"
     instance.Elements = {}
@@ -401,9 +400,11 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
     pageLayout.Padding = UDim.new(0, 7)
     pageLayout.Parent = pageContainer
     
+    -- Up-value exposed inside the scope of the pageContainer object
     local function updateCanvas()
         pageContainer.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 28)
     end
+    pageContainer:GetPropertyChangedSignal("CanvasSize"):Connect(updateCanvas) -- fallback protection
     pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
 
     local function activateTab()
@@ -417,6 +418,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         pageContainer.Visible = true
         TweenService:Create(tabButton, TweenInfo.new(0.12), {BackgroundTransparency = 0, BackgroundColor3 = theme.CardBackground}):Play()
         textLabel.TextColor3 = theme.Text
+        updateCanvas() -- Force refresh upon switching visibility
     end
 
     tabButton.MouseButton1Click:Connect(activateTab)
@@ -511,14 +513,15 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         local dot = Instance.new("Frame")
         dot.Size = UDim2.new(0, 14, 0, 14)
-        dot.Position = UDim2.new(state and 0.55 or 0.05, 1, 0.5, -7)
+        dot.Position = UDim2.new(state and 1 or 0, state and -16 or 2, 0.5, -7) -- Clean structural absolute centering
         dot.BackgroundColor3 = state and theme.WindowBg or theme.MutedText
         dot.Parent = switch
         Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
 
         local function updateToggle(fireCallback)
+            local targetPos = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
             TweenService:Create(switch, TweenInfo.new(0.12), {BackgroundColor3 = state and theme.Active or theme.WindowBg}):Play()
-            TweenService:Create(dot, TweenInfo.new(0.12), {Position = UDim2.new(state and 0.52 or 0.05, 1, 0.5, -7), BackgroundColor3 = state and theme.WindowBg or theme.MutedText}):Play()
+            TweenService:Create(dot, TweenInfo.new(0.12), {Position = targetPos, BackgroundColor3 = state and theme.WindowBg or theme.MutedText}):Play()
             if saveName then
                 windowSelf.ConfigData[saveName] = state
                 windowSelf:SaveSettingsEngine()
@@ -735,21 +738,34 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
             optBtn.MouseButton1Click:Connect(function()
                 lbl.Text = dropName .. " (" .. optName .. ")"
                 expanded = false
-                TweenService:Create(dropFrame, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, 40)}):Play()
+                local t = TweenService:Create(dropFrame, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, 40)})
+                t:Play()
                 TweenService:Create(chev, TweenInfo.new(0.15), {Rotation = 0}):Play()
                 task.spawn(callback, optName)
+                
+                t.Completed:Connect(function()
+                    updateCanvas()
+                end)
             end)
         end
 
         headerBtn.MouseButton1Click:Connect(function()
             expanded = not expanded
             local targetSize = expanded and (46 + (#options * 30)) or 40
-            TweenService:Create(dropFrame, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, targetSize)}):Play()
+            local t = TweenService:Create(dropFrame, TweenInfo.new(0.15), {Size = UDim2.new(1, 0, 0, targetSize)})
+            t:Play()
             TweenService:Create(chev, TweenInfo.new(0.15), {Rotation = expanded and 180 or 0}):Play()
             
-            -- Force Canvas calculation to refresh on layout animations
-            task.wait(0.15)
-            updateCanvas()
+            -- Keep canvas resizing completely in sync with the ongoing drop layout height animation
+            local animationLoop
+            animationLoop = game:GetService("RunService").Heartbeat:Connect(function()
+                if t.PlaybackState == Enum.PlaybackState.Playing then
+                    updateCanvas()
+                else
+                    animationLoop:Disconnect()
+                    updateCanvas()
+                end
+            end)
         end)
     end
 
