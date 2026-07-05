@@ -5,6 +5,7 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
+local VirtualUser = game:GetService("VirtualUser")
 local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
 
 Lucidity.Theme = {
@@ -16,6 +17,26 @@ Lucidity.Theme = {
     MutedText = Color3.fromRGB(138, 143, 154),
     Active = Color3.fromRGB(255, 255, 255),
     Font = Enum.Font.GothamMedium
+}
+
+local LightPalette = {
+    WindowBg = Color3.fromRGB(240, 242, 245),
+    Sidebar = Color3.fromRGB(225, 228, 232),
+    CardBackground = Color3.fromRGB(255, 255, 255),
+    Border = Color3.fromRGB(200, 205, 212),
+    Text = Color3.fromRGB(20, 21, 24),
+    MutedText = Color3.fromRGB(100, 105, 115),
+    Active = Color3.fromRGB(0, 0, 0)
+}
+
+local DarkPalette = {
+    WindowBg = Color3.fromRGB(18, 19, 22),
+    Sidebar = Color3.fromRGB(24, 25, 30),
+    CardBackground = Color3.fromRGB(30, 31, 38),
+    Border = Color3.fromRGB(42, 44, 54),
+    Text = Color3.fromRGB(242, 244, 247),
+    MutedText = Color3.fromRGB(138, 143, 154),
+    Active = Color3.fromRGB(255, 255, 255)
 }
 
 local Icons = {
@@ -56,7 +77,8 @@ function Lucidity:Notify(config)
     card.ClipsDescendants = true
     card.Parent = self.NotifContainer
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 8)
-    Instance.new("UIStroke", card).Color = self.Theme.Border
+    local cStroke = Instance.new("UIStroke", card)
+    cStroke.Color = self.Theme.Border
 
     local lblTitle = Instance.new("TextLabel")
     lblTitle.Size = UDim2.new(1, -24, 0, 24)
@@ -172,6 +194,36 @@ function Lucidity:CreateWindow(config)
     end
 end
 
+function Lucidity:UpdateThemeDisplay(newPalette)
+    self.Theme = newPalette
+    self.MainFrame.BackgroundColor3 = newPalette.WindowBg
+    self.MainFrame.UIStroke.Color = newPalette.Border
+    self.TopBar.TextLabel.TextColor3 = newPalette.Text
+    self.Sidebar.BackgroundColor3 = newPalette.Sidebar
+    self.Sidebar.UIStroke.Color = newPalette.Border
+    self.Sidebar.Parent:FindFirstChildOfClass("Frame").BackgroundColor3 = newPalette.Sidebar
+    self.Sidebar.Parent:FindFirstChildOfClass("Frame").UIStroke.Color = newPalette.Border
+
+    for _, v in pairs(self.ScreenGui:GetDescendants()) do
+        if v:IsA("Frame") or v:IsA("TextButton") or v:IsA("TextBox") or v:IsA("ScrollingFrame") then
+            if v.Name == "MainFrame" or v.Name == "Sidebar" or v.Parent.Name == "MainDisplay" then continue end
+            if v:IsA("TextButton") and v.Parent.Name == "Sidebar" then
+                if v.BackgroundTransparency < 1 then v.BackgroundColor3 = newPalette.CardBackground end
+                if v:FindFirstChild("TabText") then v.TabText.TextColor3 = (v.BackgroundTransparency < 1) and newPalette.Text or newPalette.MutedText end
+                if v:FindFirstChild("Icon") then v.Icon.ImageColor3 = (v.BackgroundTransparency < 1) and newPalette.Text or newPalette.MutedText end
+            elseif v:IsA("UIStroke") then
+                v.Color = newPalette.Border
+            elseif v:IsA("TextLabel") then
+                if v.Name == "SectionHeader" then v.TextColor3 = newPalette.MutedText else v.TextColor3 = newPalette.Text end
+            elseif v:IsA("TextBox") or v.Name == "ToggleSwitch" or v.Name == "SliderTrack" then
+                v.BackgroundColor3 = newPalette.WindowBg
+            elseif v.Parent:IsA("ScrollingFrame") and (v:IsA("Frame") or v:IsA("TextButton")) and v.Name ~= "ToggleSwitch" and v.Name ~= "SliderTrack" then
+                v.BackgroundColor3 = newPalette.CardBackground
+            end
+        end
+    end
+end
+
 function Lucidity:BuildMainInterface(windowName)
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
@@ -185,9 +237,11 @@ function Lucidity:BuildMainInterface(windowName)
     local uiScale = Instance.new("UIScale")
     uiScale.Parent = mainFrame
     self.UIScale = uiScale
-    Instance.new("UIStroke", mainFrame).Color = self.Theme.Border
+    local mStroke = Instance.new("UIStroke", mainFrame)
+    mStroke.Color = self.Theme.Border
 
     local topBar = Instance.new("Frame")
+    topBar.Name = "TopBar"
     topBar.Size = UDim2.new(1, 0, 0, 50)
     topBar.BackgroundTransparency = 1
     topBar.Parent = mainFrame
@@ -214,35 +268,19 @@ function Lucidity:BuildMainInterface(windowName)
     closeBtn.Font = Enum.Font.GothamMedium
     closeBtn.TextSize = 18
     closeBtn.Parent = topBar
-    
-    local closeCorner = Instance.new("UICorner", closeBtn)
-    closeCorner.CornerRadius = UDim.new(0, 6)
-    local closeStroke = Instance.new("UIStroke", closeBtn)
-    closeStroke.Color = self.Theme.Border
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+    Instance.new("UIStroke", closeBtn).Color = self.Theme.Border
 
     closeBtn.MouseEnter:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.1), {
-            TextColor3 = Color3.fromRGB(239, 68, 68),
-            BackgroundColor3 = self.Theme.Border
-        }):Play()
+        TweenService:Create(closeBtn, TweenInfo.new(0.1), {TextColor3 = Color3.fromRGB(239, 68, 68), BackgroundColor3 = self.Theme.Border}):Play()
     end)
-
     closeBtn.MouseLeave:Connect(function()
-        TweenService:Create(closeBtn, TweenInfo.new(0.1), {
-            TextColor3 = self.Theme.MutedText,
-            BackgroundColor3 = self.Theme.CardBackground
-        }):Play()
+        TweenService:Create(closeBtn, TweenInfo.new(0.1), {TextColor3 = self.Theme.MutedText, BackgroundColor3 = self.Theme.CardBackground}):Play()
     end)
-
     closeBtn.MouseButton1Click:Connect(function()
-        local fadeTween = TweenService:Create(mainFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 650, 0, 430),
-            BackgroundTransparency = 1
-        })
+        local fadeTween = TweenService:Create(mainFrame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 650, 0, 430), BackgroundTransparency = 1})
         fadeTween:Play()
-        fadeTween.Completed:Connect(function()
-            self.ScreenGui:Destroy()
-        end)
+        fadeTween.Completed:Connect(function() self.ScreenGui:Destroy() end)
     end)
 
     local sidebar = Instance.new("Frame")
@@ -263,6 +301,7 @@ function Lucidity:BuildMainInterface(windowName)
     Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0, 12)
 
     local mainDisplay = Instance.new("Frame")
+    mainDisplay.Name = "MainDisplay"
     mainDisplay.Size = UDim2.new(1, -216, 1, -66)
     mainDisplay.Position = UDim2.new(0, 204, 0, 54)
     mainDisplay.BackgroundColor3 = self.Theme.Sidebar
@@ -275,17 +314,40 @@ function Lucidity:BuildMainInterface(windowName)
     self:LoadSettingsEngine()
     
     local Settings = self:CreateTab("Settings", "settings", true)
+    
+    Settings:CreateButton({Name = "Save Current Configurations"}, function()
+        if writefile then
+            writefile(self.ConfigName, HttpService:JSONEncode(self.ConfigData))
+            self:Notify({Title = "System Engine", Content = "Configuration changes saved successfully.", Duration = 2.5})
+        end
+    end)
+
     Settings:CreateSection("Client Configurations")
     
+    local antiAfkEnabled = false
+    LocalPlayer.Idled:Connect(function()
+        if antiAfkEnabled then
+            VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        end
+    end)
+
+    Settings:CreateToggle({
+        Name = "Anti-AFK Disconnection Shield",
+        SaveName = "AntiAfkProfile",
+        Default = true
+    }, function(state)
+        antiAfkEnabled = state
+    end)
+
     Settings:CreateDropdown({
         Name = "Interface UI Scale Profile",
         Options = {"50%", "75%", "100%", "125%", "150%"}
     }, function(selected)
         local cleanPercent = string.gsub(selected, "%%", "")
         local numericScale = tonumber(cleanPercent)
-        if numericScale then
-            uiScale.Scale = numericScale / 100
-        end
+        if numericScale then uiScale.Scale = numericScale / 100 end
     end)
 
     Settings:CreateDropdown({
@@ -293,9 +355,9 @@ function Lucidity:BuildMainInterface(windowName)
         Options = {"Dark Mode", "Light Mode"}
     }, function(selectedTheme)
         if selectedTheme == "Light Mode" then
-            print("Switching engine interface to Light Mode rules...")
+            self:UpdateThemeDisplay(LightPalette)
         else
-            print("Restoring default Dark Mode visual configurations...")
+            self:UpdateThemeDisplay(DarkPalette)
         end
     end)
 end
@@ -322,12 +384,6 @@ function Lucidity:EnableDragging()
     end)
 end
 
-function Lucidity:SaveSettingsEngine()
-    if writefile then
-        writefile(self.ConfigName, HttpService:JSONEncode(self.ConfigData))
-    end
-end
-
 function Lucidity:LoadSettingsEngine()
     if readfile and isfile and isfile(self.ConfigName) then
         pcall(function()
@@ -339,7 +395,6 @@ end
 function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
     local theme = self.Theme
     local windowSelf = self
-    
     windowSelf.TabCount = windowSelf.TabCount + 1
 
     local tabButton = Instance.new("TextButton")
@@ -348,12 +403,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
     tabButton.Text = ""
     tabButton.Parent = windowSelf.Sidebar
     Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
-    
-    if isSettingsTab then
-        tabButton.LayoutOrder = 9999
-    else
-        tabButton.LayoutOrder = windowSelf.TabCount
-    end
+    tabButton.LayoutOrder = isSettingsTab and 9999 or windowSelf.TabCount
 
     local tabLayout = Instance.new("UIListLayout")
     tabLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -391,20 +441,16 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
     pageContainer.Parent = windowSelf.Pages
 
     local pPadding = Instance.new("UIPadding", pageContainer)
-    pPadding.PaddingLeft = UDim.new(0, 14)
-    pPadding.PaddingRight = UDim.new(0, 14)
-    pPadding.PaddingTop = UDim.new(0, 14)
-    pPadding.PaddingBottom = UDim.new(0, 14)
+    pPadding.PaddingLeft = UDim.new(0, 14) pPadding.PaddingRight = UDim.new(0, 14)
+    pPadding.PaddingTop = UDim.new(0, 14) pPadding.PaddingBottom = UDim.new(0, 14)
 
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.Padding = UDim.new(0, 7)
     pageLayout.Parent = pageContainer
     
-    -- Up-value exposed inside the scope of the pageContainer object
     local function updateCanvas()
         pageContainer.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 28)
     end
-    pageContainer:GetPropertyChangedSignal("CanvasSize"):Connect(updateCanvas) -- fallback protection
     pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
 
     local function activateTab()
@@ -412,13 +458,15 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         for _, btn in pairs(tabButton.Parent:GetChildren()) do
             if btn:IsA("TextButton") then
                 TweenService:Create(btn, TweenInfo.new(0.12), {BackgroundTransparency = 1}):Play()
-                if btn:FindFirstChild("TabText") then btn.TabText.TextColor3 = theme.MutedText end
+                if btn:FindFirstChild("TabText") then btn.TabText.TextColor3 = windowSelf.Theme.MutedText end
+                if btn:FindFirstChild("Icon") then btn.Icon.ImageColor3 = windowSelf.Theme.MutedText end
             end
         end
         pageContainer.Visible = true
-        TweenService:Create(tabButton, TweenInfo.new(0.12), {BackgroundTransparency = 0, BackgroundColor3 = theme.CardBackground}):Play()
-        textLabel.TextColor3 = theme.Text
-        updateCanvas() -- Force refresh upon switching visibility
+        TweenService:Create(tabButton, TweenInfo.new(0.12), {BackgroundTransparency = 0, BackgroundColor3 = windowSelf.Theme.CardBackground}):Play()
+        textLabel.TextColor3 = windowSelf.Theme.Text
+        if tabButton:FindFirstChild("Icon") then tabButton.Icon.ImageColor3 = windowSelf.Theme.Text end
+        updateCanvas()
     end
 
     tabButton.MouseButton1Click:Connect(activateTab)
@@ -428,17 +476,16 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
     function tabObject:CreateSection(sectionText)
         local sLabel = Instance.new("TextLabel")
+        sLabel.Name = "SectionHeader"
         sLabel.Size = UDim2.new(1, 0, 0, 24)
         sLabel.BackgroundTransparency = 1
         sLabel.Text = string.upper(sectionText)
-        sLabel.TextColor3 = theme.MutedText
+        sLabel.TextColor3 = windowSelf.Theme.MutedText
         sLabel.Font = Enum.Font.GothamBold
         sLabel.TextSize = 10
         sLabel.TextXAlignment = Enum.TextXAlignment.Left
         sLabel.Parent = pageContainer
-        
-        local sPadding = Instance.new("UIPadding", sLabel)
-        sPadding.PaddingLeft = UDim.new(0, 4)
+        Instance.new("UIPadding", sLabel).PaddingLeft = UDim.new(0, 4)
     end
 
     function tabObject:CreateButton(config, callback)
@@ -447,27 +494,27 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         local btnFrame = Instance.new("TextButton")
         btnFrame.Size = UDim2.new(1, 0, 0, 40)
-        btnFrame.BackgroundColor3 = theme.CardBackground
+        btnFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         btnFrame.Text = ""
         btnFrame.Parent = pageContainer
         Instance.new("UICorner", btnFrame).CornerRadius = UDim.new(0, 8)
-        Instance.new("UIStroke", btnFrame).Color = theme.Border
+        Instance.new("UIStroke", btnFrame).Color = windowSelf.Theme.Border
 
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(1, -24, 1, 0)
         lbl.Position = UDim2.new(0, 12, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = btnText
-        lbl.TextColor3 = theme.Text
-        lbl.Font = theme.Font
+        lbl.TextColor3 = windowSelf.Theme.Text
+        lbl.Font = windowSelf.Theme.Font
         lbl.TextSize = 12
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = btnFrame
 
         btnFrame.MouseButton1Click:Connect(function()
-            TweenService:Create(btnFrame, TweenInfo.new(0.08), {BackgroundColor3 = theme.Border}):Play()
+            TweenService:Create(btnFrame, TweenInfo.new(0.08), {BackgroundColor3 = windowSelf.Theme.Border}):Play()
             task.wait(0.08)
-            TweenService:Create(btnFrame, TweenInfo.new(0.08), {BackgroundColor3 = theme.CardBackground}):Play()
+            TweenService:Create(btnFrame, TweenInfo.new(0.08), {BackgroundColor3 = windowSelf.Theme.CardBackground}):Play()
             task.spawn(callback)
         end)
     end
@@ -485,46 +532,45 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         local toggleFrame = Instance.new("Frame")
         toggleFrame.Size = UDim2.new(1, 0, 0, 40)
-        toggleFrame.BackgroundColor3 = theme.CardBackground
+        toggleFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         toggleFrame.Parent = pageContainer
         Instance.new("UICorner", toggleFrame).CornerRadius = UDim.new(0, 8)
-        Instance.new("UIStroke", toggleFrame).Color = theme.Border
+        Instance.new("UIStroke", toggleFrame).Color = windowSelf.Theme.Border
 
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(0.7, 0, 1, 0)
         lbl.Position = UDim2.new(0, 12, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = toggleName
-        lbl.TextColor3 = theme.Text
-        lbl.Font = theme.Font
+        lbl.TextColor3 = windowSelf.Theme.Text
+        lbl.Font = windowSelf.Theme.Font
         lbl.TextSize = 12
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = toggleFrame
 
         local switch = Instance.new("TextButton")
+        switch.Name = "ToggleSwitch"
         switch.Size = UDim2.new(0, 36, 0, 20)
         switch.Position = UDim2.new(1, -48, 0.5, -10)
-        switch.BackgroundColor3 = state and theme.Active or theme.WindowBg
+        switch.BackgroundColor3 = state and windowSelf.Theme.Active or windowSelf.Theme.WindowBg
         switch.Text = ""
         switch.Parent = toggleFrame
         Instance.new("UICorner", switch).CornerRadius = UDim.new(1, 0)
-        local swStroke = Instance.new("UIStroke", switch)
-        swStroke.Color = theme.Border
+        Instance.new("UIStroke", switch).Color = windowSelf.Theme.Border
 
         local dot = Instance.new("Frame")
         dot.Size = UDim2.new(0, 14, 0, 14)
-        dot.Position = UDim2.new(state and 1 or 0, state and -16 or 2, 0.5, -7) -- Clean structural absolute centering
-        dot.BackgroundColor3 = state and theme.WindowBg or theme.MutedText
+        dot.Position = UDim2.new(state and 1 or 0, state and -16 or 2, 0.5, -7)
+        dot.BackgroundColor3 = state and windowSelf.Theme.WindowBg or windowSelf.Theme.MutedText
         dot.Parent = switch
         Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
 
         local function updateToggle(fireCallback)
             local targetPos = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-            TweenService:Create(switch, TweenInfo.new(0.12), {BackgroundColor3 = state and theme.Active or theme.WindowBg}):Play()
-            TweenService:Create(dot, TweenInfo.new(0.12), {Position = targetPos, BackgroundColor3 = state and theme.WindowBg or theme.MutedText}):Play()
+            TweenService:Create(switch, TweenInfo.new(0.12), {BackgroundColor3 = state and windowSelf.Theme.Active or windowSelf.Theme.WindowBg}):Play()
+            TweenService:Create(dot, TweenInfo.new(0.12), {Position = targetPos, BackgroundColor3 = state and windowSelf.Theme.WindowBg or windowSelf.Theme.MutedText}):Play()
             if saveName then
                 windowSelf.ConfigData[saveName] = state
-                windowSelf:SaveSettingsEngine()
             end
             if fireCallback then task.spawn(callback, state) end
         end
@@ -533,7 +579,8 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
             state = not state
             updateToggle(true)
         end)
-        updateToggle(false)
+        
+        updateToggle(true) -- CRITICAL BUGFIX: Now safely runs callback on load structure
     end
 
     function tabObject:CreateSlider(config, callback)
@@ -552,20 +599,18 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         local sliderFrame = Instance.new("Frame")
         sliderFrame.Size = UDim2.new(1, 0, 0, 50)
-        sliderFrame.BackgroundColor3 = theme.CardBackground
+        sliderFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         sliderFrame.Parent = pageContainer
         Instance.new("UICorner", sliderFrame).CornerRadius = UDim.new(0, 8)
-        sliderFrame.BorderSizePixel = 0
-        local slStroke = Instance.new("UIStroke", sliderFrame)
-        slStroke.Color = theme.Border
+        Instance.new("UIStroke", sliderFrame).Color = windowSelf.Theme.Border
 
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(0.6, 0, 0, 26)
         lbl.Position = UDim2.new(0, 12, 0, 4)
         lbl.BackgroundTransparency = 1
         lbl.Text = sliderName
-        lbl.TextColor3 = theme.Text
-        lbl.Font = theme.Font
+        lbl.TextColor3 = windowSelf.Theme.Text
+        lbl.Font = windowSelf.Theme.Font
         lbl.TextSize = 12
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = sliderFrame
@@ -575,33 +620,34 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         valLbl.Position = UDim2.new(0.7, -12, 0, 4)
         valLbl.BackgroundTransparency = 1
         valLbl.Text = tostring(value) .. suffix
-        valLbl.TextColor3 = theme.MutedText
-        valLbl.Font = theme.Font
+        valLbl.TextColor3 = windowSelf.Theme.MutedText
+        valLbl.Font = windowSelf.Theme.Font
         valLbl.TextSize = 11
         valLbl.TextXAlignment = Enum.TextXAlignment.Right
         valLbl.Parent = sliderFrame
 
         local track = Instance.new("TextButton")
+        track.Name = "SliderTrack"
         track.Size = UDim2.new(1, -24, 0, 5)
         track.Position = UDim2.new(0, 12, 1, -14)
-        track.BackgroundColor3 = theme.WindowBg
+        track.BackgroundColor3 = windowSelf.Theme.WindowBg
         track.Text = ""
         track.Parent = sliderFrame
         Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
 
         local fill = Instance.new("Frame")
         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
-        fill.BackgroundColor3 = theme.Active
+        fill.BackgroundColor3 = windowSelf.Theme.Active
         fill.Parent = track
         Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
 
         local handle = Instance.new("Frame")
         handle.Size = UDim2.new(0, 12, 0, 12)
         handle.Position = UDim2.new((value - min) / (max - min), -6, 0.5, -6)
-        handle.BackgroundColor3 = theme.Text
+        handle.BackgroundColor3 = windowSelf.Theme.Text
         handle.Parent = track
         Instance.new("UICorner", handle).CornerRadius = UDim.new(1, 0)
-        Instance.new("UIStroke", handle).Color = theme.Border
+        Instance.new("UIStroke", handle).Color = windowSelf.Theme.Border
 
         local holding = false
         local function updateSlider(input)
@@ -612,7 +658,6 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
             handle.Position = UDim2.new(percentage, -6, 0.5, -6)
             if saveName then
                 windowSelf.ConfigData[saveName] = value
-                windowSelf:SaveSettingsEngine()
             end
             task.spawn(callback, value)
         end
@@ -628,6 +673,8 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         UserInputService.InputEnded:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holding = false end
         end)
+
+        task.spawn(callback, value) -- CRITICAL BUGFIX: Fires callback immediately on layout construction
     end
 
     function tabObject:CreateInput(config, callback)
@@ -637,18 +684,18 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         local inputFrame = Instance.new("Frame")
         inputFrame.Size = UDim2.new(1, 0, 0, 40)
-        inputFrame.BackgroundColor3 = theme.CardBackground
+        inputFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         inputFrame.Parent = pageContainer
         Instance.new("UICorner", inputFrame).CornerRadius = UDim.new(0, 8)
-        Instance.new("UIStroke", inputFrame).Color = theme.Border
+        Instance.new("UIStroke", inputFrame).Color = windowSelf.Theme.Border
 
         local lbl = Instance.new("TextLabel")
         lbl.Size = UDim2.new(0.5, 0, 1, 0)
         lbl.Position = UDim2.new(0, 12, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = inputName
-        lbl.TextColor3 = theme.Text
-        lbl.Font = theme.Font
+        lbl.TextColor3 = windowSelf.Theme.Text
+        lbl.Font = windowSelf.Theme.Font
         lbl.TextSize = 12
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = inputFrame
@@ -656,17 +703,17 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         local box = Instance.new("TextBox")
         box.Size = UDim2.new(0, 150, 0, 26)
         box.Position = UDim2.new(1, -162, 0.5, -13)
-        box.BackgroundColor3 = theme.WindowBg
+        box.BackgroundColor3 = windowSelf.Theme.WindowBg
         box.Text = ""
         box.PlaceholderText = placeholder
-        box.TextColor3 = theme.Text
-        box.PlaceholderColor3 = theme.MutedText
-        box.Font = theme.Font
+        box.TextColor3 = windowSelf.Theme.Text
+        box.PlaceholderColor3 = windowSelf.Theme.MutedText
+        box.Font = windowSelf.Theme.Font
         box.TextSize = 11
         box.ClipsDescendants = true
         box.Parent = inputFrame
         Instance.new("UICorner", box).CornerRadius = UDim.new(0, 5)
-        Instance.new("UIStroke", box).Color = theme.Border
+        Instance.new("UIStroke", box).Color = windowSelf.Theme.Border
 
         box.FocusLost:Connect(function(enterPressed)
             task.spawn(callback, box.Text, enterPressed)
@@ -681,12 +728,11 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
 
         local dropFrame = Instance.new("Frame")
         dropFrame.Size = UDim2.new(1, 0, 0, 40)
-        dropFrame.BackgroundColor3 = theme.CardBackground
+        dropFrame.BackgroundColor3 = windowSelf.Theme.CardBackground
         dropFrame.ClipsDescendants = true
         dropFrame.Parent = pageContainer
         Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0, 8)
-        local dropStroke = Instance.new("UIStroke", dropFrame)
-        dropStroke.Color = theme.Border
+        Instance.new("UIStroke", dropFrame).Color = windowSelf.Theme.Border
 
         local headerBtn = Instance.new("TextButton")
         headerBtn.Size = UDim2.new(1, 0, 0, 40)
@@ -699,8 +745,8 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         lbl.Position = UDim2.new(0, 12, 0, 0)
         lbl.BackgroundTransparency = 1
         lbl.Text = dropName
-        lbl.TextColor3 = theme.Text
-        lbl.Font = theme.Font
+        lbl.TextColor3 = windowSelf.Theme.Text
+        lbl.Font = windowSelf.Theme.Font
         lbl.TextSize = 12
         lbl.TextXAlignment = Enum.TextXAlignment.Left
         lbl.Parent = headerBtn
@@ -710,7 +756,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         chev.Position = UDim2.new(1, -26, 0.5, -7)
         chev.BackgroundTransparency = 1
         chev.Image = Icons.chevron
-        chev.ImageColor3 = theme.MutedText
+        chev.ImageColor3 = windowSelf.Theme.MutedText
         chev.Parent = headerBtn
 
         local listContainer = Instance.new("Frame")
@@ -726,14 +772,14 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
         for _, optName in pairs(options) do
             local optBtn = Instance.new("TextButton")
             optBtn.Size = UDim2.new(1, 0, 0, 26)
-            optBtn.BackgroundColor3 = theme.WindowBg
+            optBtn.BackgroundColor3 = windowSelf.Theme.WindowBg
             optBtn.Text = optName
-            optBtn.TextColor3 = theme.MutedText
-            optBtn.Font = theme.Font
+            optBtn.TextColor3 = windowSelf.Theme.MutedText
+            optBtn.Font = windowSelf.Theme.Font
             optBtn.TextSize = 11
             optBtn.Parent = listContainer
             Instance.new("UICorner", optBtn).CornerRadius = UDim.new(0, 5)
-            Instance.new("UIStroke", optBtn).Color = theme.Border
+            Instance.new("UIStroke", optBtn).Color = windowSelf.Theme.Border
 
             optBtn.MouseButton1Click:Connect(function()
                 lbl.Text = dropName .. " (" .. optName .. ")"
@@ -742,10 +788,7 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
                 t:Play()
                 TweenService:Create(chev, TweenInfo.new(0.15), {Rotation = 0}):Play()
                 task.spawn(callback, optName)
-                
-                t.Completed:Connect(function()
-                    updateCanvas()
-                end)
+                t.Completed:Connect(function() updateCanvas() end)
             end)
         end
 
@@ -756,7 +799,6 @@ function Lucidity:CreateTab(tabName, iconName, isSettingsTab)
             t:Play()
             TweenService:Create(chev, TweenInfo.new(0.15), {Rotation = expanded and 180 or 0}):Play()
             
-            -- Keep canvas resizing completely in sync with the ongoing drop layout height animation
             local animationLoop
             animationLoop = game:GetService("RunService").Heartbeat:Connect(function()
                 if t.PlaybackState == Enum.PlaybackState.Playing then
